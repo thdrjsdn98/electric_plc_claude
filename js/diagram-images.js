@@ -1,0 +1,20 @@
+const DIAGRAM_IMAGES = {
+  "1": "assets/diagrams/diagram-01.jpg",
+  "2": "assets/diagrams/diagram-02.jpg",
+  "3": "assets/diagrams/diagram-03.jpg",
+  "4": "assets/diagrams/diagram-04.jpg",
+  "5": "assets/diagrams/diagram-05.jpg",
+  "6": "assets/diagrams/diagram-06.jpg",
+  "7": "assets/diagrams/diagram-07.jpg",
+  "8": "assets/diagrams/diagram-08.jpg",
+  "9": "assets/diagrams/diagram-09.jpg",
+  "10": "assets/diagrams/diagram-10.jpg",
+  "11": "assets/diagrams/diagram-11.jpg",
+  "12": "assets/diagrams/diagram-12.jpg",
+  "13": "assets/diagrams/diagram-13.jpg",
+  "14": "assets/diagrams/diagram-14.jpg",
+  "15": "assets/diagrams/diagram-15.jpg",
+  "16": "assets/diagrams/diagram-16.jpg",
+  "17": "assets/diagrams/diagram-17.jpg",
+  "18": "assets/diagrams/diagram-18.jpg"
+};
