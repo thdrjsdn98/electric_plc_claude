@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=3, user-scalable=yes">
+<title>0916_공도7 PLC 제어반 시뮬레이터</title>
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+
+<div class="header-bar">
+<h1>⚡ 0916_공도7 제어반 시뮬레이터
+  <span class="hdr-badge-wrap">
+    <span class="hdr-badge-title">PLC TRAINING SIMULATOR</span>
+    <span class="hdr-badge-ver">Ver 0.4.3 · REALFLOW 1~9</span>
+  </span>
+</h1>
+</div>
+<div class="sub">전기기능사 실기 대비 · PB0/PB1/PB2 · SS·FLS·LS1·LS2·EOCR</div>
+
+<div class="board">
+
+  <div class="row">
+    <div class="panel-title">CONTROL&nbsp;PANEL</div>
+    <div></div>
+  </div>
+
+  <div class="board-grid" id="boardGrid">
+
+    <div class="diagram-flex" id="diagramFlex">
+
+      <div class="rail-left" id="railLeft">
+        <div class="btn-block" id="btnBlock"></div>
+
+        <div class="rail-right" id="railRight">
+          <div class="switch-block" id="switchBlock">
+            <div class="switch-row switch-row-center" id="switchRowTop"></div>
+            <div class="switch-row" id="switchRowMiddle"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diagram-select">
+        <div class="diagram-title">
+          <span>도면 번호 선택 (P0000A~P0000E, 2진 가중치 합산)</span>
+          <span class="diagram-readout" id="diagramReadout">0</span>
+        </div>
+        <div class="chip-row" id="chipRow"></div>
+      </div>
+
+      <div class="diagram-image-wrap" id="diagramImageWrap">
+        <div class="diagram-image-title">
+          <span id="diagramImageTitle">도면 미리보기</span>
+          <span class="run-status-badge" id="runStatusBadge">
+            <span class="run-status-dot"></span>정상 동작
+          </span>
+        </div>
+        <div class="diagram-image-stage" id="diagramImageStage">
+          <img id="diagramImage" class="diagram-image" alt="선택된 도면 원본" />
+          <svg id="diagramOverlay" class="diagram-overlay" viewBox="0 0 1754 1240" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="diagram-image-empty" id="diagramImageEmpty">도면 번호를 선택하면(1~18) 원본 회로도가 여기 표시됩니다.</div>
+        <div class="diagram-live-row" id="diagramLiveRow"></div>
+      </div>
+
+    </div>
+
+    <div class="internal-block">
+      <div class="diagram-title"><span>내부 릴레이 · 타이머 동작상태</span></div>
+      <div class="internal-row" id="relayRow"></div>
+      <div class="internal-row" id="timerRow" style="margin-top:6px;"></div>
+      <div class="lamp-block" id="lampBlock"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toolbar">
+  <button class="tool-btn" id="soundBtn">🔊 소리 켜짐</button>
+  <button class="tool-btn" id="resetBtn">↺ 전체 리셋</button>
+</div>
+<div class="toolbar timer-set-row" style="margin-top:6px;">
+  <label class="timer-set-label">
+    <span>FR(T0000)</span><input type="number" id="frSetInput" min="0.2" max="99.8" step="0.1" value="4.0">초
+  </label>
+  <label class="timer-set-label">
+    <span>긴FR(T0003)</span><input type="number" id="longFrSetInput" min="0.2" max="99.8" step="0.1" value="14.0">초
+  </label>
+  <label class="timer-set-label">
+    <span>T1(T0001)</span><input type="number" id="t1SetInput" min="0.1" max="99.9" step="0.1" value="5.0">초
+  </label>
+  <label class="timer-set-label">
+    <span>T2(T0002)</span><input type="number" id="t2SetInput" min="0.1" max="99.9" step="0.1" value="5.0">초
+  </label>
+</div>
+<div class="toolbar" style="margin-top:6px;">
+  <span style="font-size:12px;display:flex;align-items:center;">▶ 재생속도</span>
+  <button class="tool-btn speed-btn" data-speed="0.25">0.25x</button>
+  <button class="tool-btn speed-btn" data-speed="0.5">0.5x</button>
+  <button class="tool-btn speed-btn active" data-speed="1">1x</button>
+  <button class="tool-btn speed-btn" data-speed="2">2x</button>
+  <button class="tool-btn speed-btn" data-speed="4">4x</button>
+</div>
+
+
+<details class="status">
+  <summary>🎬 동작 로그 · 리플레이<span class="details-summary-state" id="logStateSpan"></span></summary>
+  <div style="margin-top:6px;">
+    <div id="actionLogList" style="max-height:160px;overflow-y:auto;font-family:monospace;font-size:11px;line-height:1.6;background:rgba(0,0,0,.05);border-radius:6px;padding:6px 8px;"></div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+      <button class="tool-btn" id="replayBtn">▶ 재생</button>
+      <button class="tool-btn" id="clearLogBtn">🗑 로그 지우기</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:6px;">스위치·버튼·도면칩 조작을 시간 순서대로 기록합니다. 전체 리셋 시 자동으로 초기화됩니다.</div>
+  </div>
+</details>
+
+<details class="status" open>
+  <summary>📖 도면별 동작 해설 (AI 분석)<span class="details-summary-state" id="aiStateSpan"></span></summary>
+  <div style="margin-top:6px;font-size:12.5px;line-height:1.7;">
+    <div id="explainTag" style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.08);color:var(--muted);margin-bottom:6px;"></div>
+    <div id="explainSummary" style="font-weight:700;color:var(--label);margin-bottom:4px;"></div>
+    <details id="explainDetailToggle" style="margin-top:2px;">
+      <summary style="cursor:pointer;font-size:11px;color:var(--accent);font-weight:700;">상세 설명 더보기</summary>
+      <ul id="explainList" style="margin:6px 0 0;padding-left:18px;"></ul>
+    </details>
+    <div id="explainEmpty" style="color:var(--muted);">도면 번호를 선택하면(1~18) 해설이 여기 표시됩니다.</div>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:6px;">
+      IL 코드를 직접 분석한 해설입니다. [검증]=시뮬레이터로 직접 실행 확인 / [도면대조]=원본 시퀀스 도면과 대조 완료. 실제와 다르게 동작하면 알려주세요.
+    </div>
+  </div>
+</details>
+
+<details class="status">
+  <summary>🎲 예측 퀴즈 모드<span class="details-summary-state" id="quizStateSpan"></span></summary>
+  <div style="margin-top:6px;font-size:12.5px;line-height:1.6;">
+    <div id="quizQuestion" style="min-height:40px;">"🎲 새 문제" 버튼을 눌러 시작하세요. (먼저 도면 번호를 선택해주세요)</div>
+    <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">
+      <button class="tool-btn" id="quizAnswerOn" style="display:none;">ON이 된다</button>
+      <button class="tool-btn" id="quizAnswerOff" style="display:none;">OFF다</button>
+    </div>
+    <div id="quizResult" style="margin-top:6px;font-weight:800;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap;gap:8px;">
+      <button class="tool-btn" id="quizNewBtn">🎲 새 문제</button>
+      <div id="quizScore" style="font-size:12px;color:var(--muted);">정답 0 / 0</div>
+    </div>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:6px;">
+      정답은 제가 미리 정해두지 않아요 — 예측을 고르면 실제로 그 입력을 조작하고, 실제 IL 로직이 계산한 결과로 그대로 채점합니다.
+    </div>
+  </div>
+</details>
+
+<details class="status">
+  <summary>내부 상태 보기 (디버그)<span class="details-summary-state" id="debugStateSpan"></span></summary>
+  <div class="status-grid" id="statusGrid"></div>
+</details>
+
+<details class="status" open>
+  <summary>⚡ 동력회로(배선) — 실시간 동작 상태<span class="details-summary-state" id="powerStateSpan"></span></summary>
+  <div style="margin-top:6px;">
+    <div style="background:#0d0f13;border-radius:8px;padding:10px 4px;">
+      <svg viewBox="0 0 460 300" class="power-circuit-svg" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="18" x2="430" y2="18" class="pc-wire pc-energized" id="pcMain"/>
+        <text x="15" y="22" class="pc-lbl" text-anchor="start">L1-L3</text>
+
+        <line x1="230" y1="18" x2="230" y2="45" class="pc-wire pc-energized" id="pcWireToEocr"/>
+        <rect x="190" y="45" width="80" height="34" rx="5" class="pc-eocr-box" id="pcEocrBox"/>
+        <text x="230" y="66" class="pc-lbl pc-eocr-lbl" id="pcEocrLbl">EOCR</text>
+
+        <line x1="230" y1="79" x2="230" y2="105" class="pc-wire" id="pcWireEocrOut"/>
+        <line x1="115" y1="105" x2="345" y2="105" class="pc-wire" id="pcSplitBus"/>
+        <line x1="115" y1="105" x2="115" y2="130" class="pc-wire" id="pcMc1Feed"/>
+        <line x1="345" y1="105" x2="345" y2="130" class="pc-wire" id="pcMc2Feed"/>
+
+        <g>
+          <rect x="97" y="130" class="pc-contact-frame" width="36" height="34"/>
+          <line x1="115" y1="130" x2="115" y2="139" class="pc-blade" id="pcMc1Blade"/>
+        </g>
+        <text x="115" y="180" class="pc-lbl">MC1</text>
+        <line x1="115" y1="164" x2="115" y2="205" class="pc-wire" id="pcMc1Out"/>
+
+        <g>
+          <rect x="327" y="130" class="pc-contact-frame" width="36" height="34"/>
+          <line x1="345" y1="130" x2="345" y2="139" class="pc-blade" id="pcMc2Blade"/>
+        </g>
+        <text x="345" y="180" class="pc-lbl">MC2</text>
+        <line x1="345" y1="164" x2="345" y2="205" class="pc-wire" id="pcMc2Out"/>
+
+        <circle cx="115" cy="235" r="26" class="pc-motor-body" id="pcM1Body"/>
+        <g class="pc-motor-fan" id="pcM1Fan" style="transform-origin:115px 235px;">
+          <line x1="115" y1="215" x2="115" y2="255" stroke="#e8ecf1" stroke-width="2"/>
+          <line x1="95" y1="235" x2="135" y2="235" stroke="#e8ecf1" stroke-width="2"/>
+        </g>
+        <text x="115" y="240" class="pc-lbl" style="fill:#fff;">M1</text>
+
+        <circle cx="345" cy="235" r="26" class="pc-motor-body" id="pcM2Body"/>
+        <g class="pc-motor-fan" id="pcM2Fan" style="transform-origin:345px 235px;">
+          <line x1="345" y1="215" x2="345" y2="255" stroke="#e8ecf1" stroke-width="2"/>
+          <line x1="325" y1="235" x2="365" y2="235" stroke="#e8ecf1" stroke-width="2"/>
+        </g>
+        <text x="345" y="240" class="pc-lbl" style="fill:#fff;">M2</text>
+      </svg>
+      <div style="text-align:center;margin-top:6px;">
+        <button class="tool-btn" id="togglePowerPhotoBtn" style="font-size:10.5px;padding:4px 10px;">📷 실제 배선 사진 보기</button>
+      </div>
+      <div id="powerPhotoWrap" style="display:none;text-align:center;margin-top:10px;">
+        <img src="assets/power-photo.jpg" alt="동력회로 참고 이미지" style="max-width:100%;height:auto;border-radius:6px;cursor:zoom-in;" onclick="document.getElementById('lightboxImg').src=this.src;document.getElementById('lightbox').classList.add('open');">
+      </div>
+    </div>
+    <div style="font-size:10.5px;color:var(--muted);margin-top:6px;">EOCR 트립·MC1/MC2 여자 상태를 실제 시뮬레이션 값과 실시간으로 연동해서 보여줍니다 (녹색=통전, 회색=차단). 배선 자체는 1~18번 도면 전체에서 동일합니다.</div>
+  </div>
+</details>
+
+<div class="note">
+  ✅ 1번~18번 도면 전부 사용자께서 직접 작성해주신 완전한 IL(명령어 리스트)을 그대로 해석·실행합니다.
+  도면 선택 칩(P0000A~E) 값에 따라 해당 번호의 독립된 프로그램이 실행되고, SS(M/A)·FLS·LS1·LS2·PB0~2·EOCR
+  입력에 따라 X/X1~X4/타이머(FR,T1,T2,긴FR)/MC1·MC2/YL·BZ·WL이 원본 그대로 계산됩니다. RL은 MC1, GL은 MC2
+  보조접점에 직결되는 실제 배선 그대로 반영했습니다 (PLC가 아니라 하드웨어 배선). EOCR 스위치는 <b>OFF=정상, ON=트립(과부하)</b>입니다.<br><br>
+  이상하게 동작하는 부분이 있으면 도면 번호와 함께 알려주세요.
+</div>
+
+<details class="status" style="max-width:640px;margin:14px auto 0;">
+  <summary>📋 변경 이력 (v0.3.15)</summary>
+  <div style="font-size:12px;line-height:1.7;margin-top:6px;">
+    <!-- ⚠️ 버전 규칙: 업데이트할 때마다 반드시 0.0.1씩만 증가시킬 것. 0.1.0 단위로 올리지 말 것 (사용자 지정 규칙, 2025-09-18 확정). -->
+    <div style="color:var(--muted);font-size:10.5px;margin-bottom:6px;">※ 버전은 업데이트마다 0.0.1씩 증가합니다.</div>
+    <b>v0.3.15</b> — 🔧 사용자 제공 스크린샷으로 주회로 길이 재확인: MC1/MC2 통전 시 빨간 오버레이가 모터(M1/M2) 원 중간(y=774)에서 끊겨 실제 검은선(접지 기호 직전, y=826)까지 못 미치던 문제 수정. 녹색 접지선(PE)도 같은 이유로 y=806에서 멈춰 접지 기호에 닿지 않던 것을 y=826까지 연장. 아울러 보조회로 전류 애니메이션이 항상 위(전원측)→아래(부하측) 방향으로만 흐르도록, 경로 생성 시 시작점이 끝점보다 아래에 있으면 자동으로 순서를 뒤집는 정규화 로직을 makePath에 추가(좌표 자체는 변경 없음, 그리는 순서만 보정)<br>
+    <b>v0.3.14</b> — 🔧 원본 도면 재대조 수정: 주회로 MC2 3상 입력/출력 좌표를 실제 MC2 주접점 위치로 이동하고 PE를 상선에서 분리. TB1→M1/M2 보호도체(PE)를 항상 표시되는 녹색 오버레이로 추가. 도면 1 보조회로의 잘못된 EOCR 중간 가로 통전 및 A/FLS 장거리 일괄 통전을 제거하고 접점 구간별 표시로 분리<br>
+    <b>v0.3.13</b> — 🧭 원본 도면 1번 배선 재대조: FUSE 상·하단 제어전원 경로를 FUSE 전/후 두 구간으로 분리해 원본 배선 형태를 그대로 표시. EOCR 전원측 중간 분기에서 자동(A)·FLS 가지로 이어지는 실제 가로 배선을 추가. 주회로 MC1 위치는 유지하고 MC2 입력 3상 교차배선의 끝점을 MC2 주접점 단자까지 연장하여 짧게 끊겨 보이던 오버레이 수정. 접지선(PE)은 후속 전체 도면 공통 녹색 오버레이 적용을 위한 기준 경로 점검<br>
+    <b>v0.3.12</b> — 🔧 원본 도면 기준 통전 표시 재정비: 2~18번 보조회로에서 하단 공통선과 좌측 귀환선을 상시 통전으로 칠하던 처리를 제거하고 실제 부하가 하나 이상 여자될 때만 귀환 전류를 표시하도록 변경. 중간 수평 분기는 양 끝 회로 상태가 모두 성립할 때만 표시하는 보수적 판정을 유지하여 A/M·접점 사이의 비접속 구간으로 빨간선이 번지는 현상을 추가 억제. 원본 JPG 검출 좌표를 그대로 사용하여 검은 배선 중심과 오버레이 정렬 유지<br>
+    <b>v0.3.11</b> — 🧭 도면 통전 오버레이 전면 재검토: 1~18번 원본 회로도 JPG의 검은 배선 좌표를 기준으로 주회로·보조회로 오버레이 정렬을 다시 점검하고, 2~18번 보조회로의 중간 수평선을 기존 “구간 안의 출력 하나라도 ON이면 전체 점등” 방식에서 “양 끝 실제 분기 상태가 모두 성립할 때만 점등”하는 방식으로 변경. 이로써 A/M처럼 서로 다른 가지 사이, 열린 접점 너머, 인접 출력 때문에 관계없는 검은선까지 빨갛게 이어지는 현상을 억제. 전류 애니메이션 점선도 원본 검은선 중심을 확인하기 쉽도록 간격 조정<br>
+    <b>v0.3.10</b> — ⚡ 도면 통전 오버레이 수정: 2번 도면에서 이미지 선 검출 결과를 출력 상태와 단순 연결하면서 SS의 A(자동)·M(수동) 사이 비통전 구간까지 빨간선이 켜지던 오류 수정. A/M 분리 구간은 도면별 비접속 예외로 처리하여 해당 구간에 전류 애니메이션이 표시되지 않도록 변경<br>
+    <b>v0.3.9</b> — 🐛 긴급 버그 수정: v0.3.8에서 DIAGRAM_ROW_LABELS를 스크립트 뒷부분에서 선언해, 도면 선택 시 "Cannot access before initialization" 오류로 전체 렌더 루프가 멈춰 스위치·버튼을 눌러도 화면이 전혀 안 바뀌던 문제 수정(선언 위치를 앞으로 이동). 실제 헤드리스 크롬으로 클릭까지 재현해 정상 동작 확인 완료. 실시간 상태 행에 전선처럼 이어지는 연결선 추가<br>
+    <b>v0.3.8</b> — 원본 도면 이미지 바로 아래에 그 도면의 하단 라벨(EOCR·FR·YL·BZ·MC1... 등) 순서 그대로 실시간 상태 동그라미 행 추가(18개 도면 전부 직접 열어서 라벨 순서 확인 후 반영). 아울러 사용자가 주신 원본 IL 전체(678줄)를 자동 파싱해 저장된 데이터와 대조 검증 완료(16개 도면 100% 일치, 4·7번은 이전에 고친 자기리셋 버그 수정이 유지되고 있음을 확인)<br>
+    <b>v0.3.7</b> — 🎲 예측 퀴즈 모드 추가: 정답을 미리 정해두지 않고, 예측을 고르면 실제로 그 입력을 조작해서 IL 로직이 계산한 결과 그대로 채점<br>
+    <b>v0.3.6</b> — 동작 로그·리플레이 기능 추가(조작 이력 기록 후 그대로 재생), 재생속도 조절(0.25x~4x) 추가, EOCR 트립·MC1/MC2 여자 상태와 실시간 연동되는 동력회로 SVG 애니메이션 추가(실제 배선 사진도 토글로 확인 가능), 도면별 동작 해설(AI가 IL 코드를 분석) 추가, FR/T1/T2 설정값·소리 설정을 새로고침해도 유지되도록 저장(전체 리셋으로는 초기화되지 않음)<br>
+    <b>v0.3.5</b> — 사용자가 제공한 도면 1~18번 원본 회로도(A4 스캔본)를 패널 내장, 도면 번호 선택 시 해당 원본 이미지가 자동으로 표시됨(클릭 시 확대보기) · EOCR 스위치 옆에 T0~T3 타이머 경과/설정 시간 미니 표시판 추가 · 스위치 배치를 윗줄(EOCR·SS·FLS)/아랫줄(LS1·LS2) 2단으로 재배치<br>
+    <b>v0.3.4</b> — 내부 릴레이(X0~X4)·타이머(T0~T3) 동작상태 표시등 추가 (전원 인가(코일 여자) 시 초록/주황 점등)<br>
+    <b>v0.3.3</b> — 사용자 수정본 반영: 3번(트립조건 반전 오타)·4·7번(자기리셋이 엉뚱한 타이머를 보던 문제)·13번(LS2+PB1 자기유지 안 되던 버그)·15번(WL 출력 누락)·17번(PB0 누락) 수정, 16번은 순시접점 대신 한시접점으로 확정<br>
+    <b>v0.3.2</b> — FR/긴FR 자기 리셋(반복) 구문 누락 수정 → 1번 등 트립 경보가 한 번만 울리고 멈추던 문제 해결, 이제 트립 지속 시 계속 반복 점멸<br>
+    <b>v0.3.1</b> — 1~18번 도면 전체를 사용자가 직접 작성한 완전한 IL로 전면 재구성 (기존의 복잡한 이중 구조를 걷어내고 18개 독립 프로그램으로 통일, 16번 도면 순시/한시 접점 구분 반영)<br>
+    <b>v0.2.4</b> — 부저(BZ)가 짧게 한 번만 삑 하던 걸, 켜져 있는 동안 계속 울리는 지속음으로 변경<br>
+    <b>v0.2.3</b> — 모든 효과음을 필터링된 노이즈 기반으로 재설계 (사인/사각파 삑삑거림 → 자연스러운 클릭·철컥·통 소리)<br>
+    <b>v0.2.2</b> — PB0·PB1·PB2 버튼 눌림 소리, 도면 선택 칩 클릭 소리 추가<br>
+    <b>v0.2.1</b> — 셀렉터 스위치 5개에 딸깍 소리, MC1·MC2에 전자접촉기 철컥 소리 추가<br>
+    <b>v0.2.0</b> — 디자인 전면 개편: 실제 산업용 제어반 느낌(브러시드 메탈 외장, 코너 리벳, 크롬 스위치, 3D 눌림 버튼, 유리 렌즈 램프)으로 변경<br>
+    <b>v0.1.9</b> — 패널 내장 시퀀스 섹션을 제거하고, 별도 페이지로 연결하는 링크 버튼으로 교체<br>
+    <b>v0.1.8</b> — 실제 도면 사진(2~11,14,15번) 대조하여 동작 시퀀스 문서 업데이트 (MC1·MC2 상호 인터록 반영)<br>
+    <b>v0.1.7</b> — 도면 1~18번 동작 시퀀스 설명을 패널 하단 접이식 섹션으로 삽입<br>
+    <b>v0.1.6</b> — 하단 변경 이력(버전) 접이식 섹션 추가<br>
+    <b>v0.1.5</b> — 17·18번 도면 PB0(정지) 미반영 버그 수정 (LS1/LS2 자기유지 중에도 PB0 눌러도 안 끊기던 문제)<br>
+    <b>v0.1.4</b> — PB0·PB1·PB2 버튼을 누르고 있어야 ON인 모멘터리 방식 → 한 번 누르면 ON, 다시 누르면 OFF인 토글 방식으로 변경<br>
+    <b>v0.1.3</b> — FR(T0000) 전체주기 사용자 설정 기능 추가 (입력한 값을 자동으로 반/반 분배, 홀수 초도 정확히 반씩)<br>
+    <b>v0.1.2</b> — T1(T0001)·T2(T0002) 설정시간(초) 사용자 입력 기능 추가<br>
+    <b>v0.1.1</b> — 18번 도면에 WL = T1 OR T2(한시, 병렬구조) 추가<br>
+    <b>v0.1.0</b> — 도면 번호 선택기 유효 표시 범위를 1~15 → 1~18로 확장<br>
+    <b>v0.0.9</b> — 12·13·16·17·18번 도면 신규 추가, MPUSH/MLOAD/MPOP(분기점 저장·재사용) 명령어 지원, 12·13번 WL을 순시(타이머 동작 중 즉시 ON)로 수정<br>
+    <b>v0.0.8</b> — AND&gt;/AND&gt;= 비교식이 "구간(하한~상한) 비교"였음을 발견, 범위 비교 방식으로 전면 수정 → BZ/YL이 겹치지 않고 정확히 번갈아 점등<br>
+    <b>v0.0.7</b> — FR/긴FR 비교식을 절반-프리셋 기준으로 임시 수정 (리셋 순간만 반짝이던 문제 완화, v0.0.8에서 근본 수정)<br>
+    <b>v0.0.6</b> — 원본 IL이 타이머를 물리주소(T0000)와 태그명(FR)으로 혼용 참조하던 버그 발견 및 별칭(alias) 처리로 수정<br>
+    <b>v0.0.5</b> — 추측 로직을 걷어내고 실제 XG5000 명령어(IL, plc.txt) 1281줄을 그대로 해석·실행하는 인터프리터로 전면 교체<br>
+    <b>v0.0.4</b> — EOCR 트립 시 근거 없이 넣었던 RL/BZ 강제 점등 로직 제거 (실제로는 전원 차단처럼 전체 소자)<br>
+    <b>v0.0.3</b> — SS를 M(수동)/A(자동)으로 반영, 전기기능사 표준 SS·FLS·FR 교번운전 회로 참고해 자동/수동 시퀀스 구현<br>
+    <b>v0.0.2</b> — 도면 번호 선택 칩(P0000A~E, 2진 가중치 십육·팔·사·이·일) 추가<br>
+    <b>v0.0.1</b> — 최초 버전: 셀렉터 스위치 5개(SS·FLS·LS1·LS2·EOCR), PB버튼 3개, 램프(RL·GL·YL·WL·BZ·MC1·MC2) 기본 패널 구성
+  </div>
+</details>
+
+<div class="toolbar" style="margin-top:6px;">
+  <a href="https://claude.ai/artifact/GGK2g6zE1HTEvP7VJaeW62" target="_blank" class="tool-btn" style="text-decoration:none;">🧭 도면 1~18번 동작 시퀀스 (별도 페이지)</a>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" src="" alt="도면 확대보기">
+</div>
+
+<script src="js/plc-data.js"></script>
+<script src="js/diagram-images.js"></script>
+<script src="js/simulator.js"></script>
+</body>
+</html>
