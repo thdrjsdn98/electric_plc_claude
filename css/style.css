@@ -1,0 +1,710 @@
+:root{
+    --bg:#070b13;
+    --page-fg:#dce6f5;
+    --panel:#0f1826;
+    --panel-2:#0b1220;
+    --border:#1d3049;
+    --border-soft:#16233a;
+    --accent:#39c6ff;
+    --accent-2:#22d3ee;
+    --accent-dim:#1b4a63;
+    --yellow:#ffd54a;
+    --green:#34e0a1;
+    --red:#ff5d6c;
+    --blue:#5aa9ff;
+    --amber:#ffb454;
+    --muted:#7d8ba3;
+    --label:#eaf2ff;
+    --card-fg:#dce6f5;
+    --glow:rgba(57,198,255,.35);
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      /* still dark HUD even in light system mode, this UI is inherently dark */
+    }
+  }
+  *{box-sizing:border-box;}
+  html{ overflow-x:hidden; }
+  body{
+    overflow-x:hidden;
+    max-width:100vw;
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(57,198,255,.10), transparent 60%),
+      var(--bg);
+    color:var(--page-fg);
+    font-family:"Segoe UI","Pretendard","Malgun Gothic",system-ui,sans-serif;
+    padding:10px 8px 40px;
+  }
+  h1{
+    font-size:22px;
+    text-align:left;
+    margin:0;
+    font-weight:800;
+    color:var(--label);
+    letter-spacing:.01em;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  h1 .hdr-badge-wrap{
+    margin-left:auto;
+    text-align:right;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:2px;
+  }
+  h1 .hdr-badge-title{
+    font-size:11px; font-weight:800; letter-spacing:.1em; color:var(--muted);
+  }
+  h1 .hdr-badge-ver{ font-size:10px; color:var(--muted); }
+  h1 .hdr-badge-status{
+    font-size:10.5px; font-weight:800; color:var(--green); display:flex; align-items:center; gap:5px;
+  }
+  h1 .hdr-badge-status::before{
+    content:""; width:7px; height:7px; border-radius:50%; background:var(--green);
+    box-shadow:0 0 6px 1px rgba(52,224,161,.9);
+    display:inline-block;
+  }
+  .header-bar{
+    max-width:1500px;
+    margin:0 auto;
+    background:linear-gradient(180deg, #142238, #0d1826);
+    border:1px solid var(--border);
+    border-bottom:none;
+    border-radius:12px 12px 0 0;
+    padding:12px 16px 8px;
+    box-shadow:0 0 0 1px rgba(57,198,255,.06) inset;
+  }
+  @media (max-width:600px){
+    h1{ font-size:15px; gap:6px; flex-wrap:wrap; }
+    .header-bar{ padding:8px 10px 6px; }
+    h1 .hdr-badge-title{ font-size:9px; }
+    h1 .hdr-badge-ver{ font-size:8.5px; }
+  }
+  .sub{
+    text-align:left;
+    color:var(--muted);
+    font-size:12px;
+    margin:0 auto 9px;
+    max-width:1500px;
+    background:linear-gradient(180deg, #0d1826, #0b1420);
+    border:1px solid var(--border);
+    border-top:none;
+    border-radius:0 0 12px 12px;
+    padding:2px 16px 9px;
+  }
+  /* ---------- Outer board (HUD frame) ---------- */
+  .board{
+    max-width:1500px;
+    margin:0 auto;
+    background:
+      linear-gradient(180deg, rgba(57,198,255,.04), transparent 120px),
+      var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    box-shadow:
+      0 20px 45px rgba(0,0,0,.55),
+      0 0 0 1px rgba(57,198,255,.05) inset;
+    padding:10px 9px 13px;
+    position:relative;
+    overflow:hidden;
+  }
+  .board::before{
+    content:"";
+    position:absolute; left:0; right:0; top:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity:.6;
+  }
+  .row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+    position:relative;
+    z-index:1;
+    margin-bottom:7px;
+  }
+  .panel-title{
+    color:var(--accent);
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.14em;
+    padding:4px 10px;
+    background:rgba(57,198,255,.08);
+    border:1px solid var(--border-soft);
+    border-radius:5px;
+  }
+  /* ---------- 3-column HUD grid ---------- */
+  .board-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1.15fr;
+    gap:10px;
+    align-items:start;
+    position:relative; z-index:1;
+  }
+  .diagram-flex{
+    display:contents;
+  }
+  /* display:contents 안의 자식은 브라우저에 따라 board-grid의 align-items:start를
+     제대로 상속받지 못하고 stretch되는 버그가 있어 개별적으로 명시함 */
+  .rail-left, .diagram-select, .diagram-image-wrap, .internal-block{
+    align-self:start;
+  }
+  .diagram-select{ grid-column:1 / -1; grid-row:1; min-width:0; }
+  .diagram-image-wrap{ grid-column:1; grid-row:2; }
+  .internal-block{ grid-column:2; grid-row:2; }
+  .rail-left{ grid-column:3; grid-row:2; }
+  /* rail-right·lamp-block은 이제 rail-left 안에 중첩되어 별도 grid 배치가 필요 없음 */
+
+  .diagram-select::before,
+  .internal-block::before,
+  .rail-left::before,
+  .diagram-image-wrap::before{
+    display:inline-block;
+    font-size:11.5px; font-weight:800; letter-spacing:.06em;
+    color:var(--accent);
+    margin-bottom:7px;
+    padding:5px 11px;
+    border-radius:6px;
+    background:rgba(57,198,255,.10);
+    border:1px solid var(--border-soft);
+  }
+  .diagram-select::before{ content:"⊗  회로 선택"; }
+  .diagram-image-wrap::before{ content:"⊗  회로도"; }
+  .internal-block::before{ content:"⚛  PLC 시퀀스 / 상태 흐름도"; }
+  .rail-left::before{ content:"🎛  제어판"; }
+
+
+  /* ---------- Cards ---------- */
+  .diagram-select, .internal-block, .rail-left,
+  .diagram-image-wrap, .lamp-block{
+    min-width:0;
+  }
+  .diagram-select, .internal-block, .rail-left{
+    background:linear-gradient(180deg, rgba(57,198,255,.03), transparent);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    padding:8px;
+  }
+  .rail-right{ margin-top:10px; padding-top:10px; border-top:1px solid var(--border-soft); min-width:0; }
+
+  /* ---------- Selector switches ---------- */
+  .switch-block{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+  .switch-row{
+    display:flex;
+    justify-content:center;
+    gap:11px;
+    flex-wrap:wrap;
+  }
+  .switch-row-center{ justify-content:center; }
+  .switch-unit{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    width:56px;
+  }
+  .switch-knob-wrap{
+    width:48px; height:48px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #16283e, #0a1320 75%);
+    box-shadow:
+      0 0 0 2px var(--border-soft),
+      0 0 0 3px rgba(57,198,255,.08),
+      inset 0 2px 4px rgba(0,0,0,.6);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    position:relative;
+    touch-action:manipulation;
+    user-select:none;
+    transition:box-shadow .15s;
+  }
+  .switch-knob-wrap::before{
+    content:"";
+    position:absolute; inset:8px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 28%, #1c3350, #0c1626 70%);
+    box-shadow:inset 0 -2px 3px rgba(0,0,0,.5), inset 0 2px 2px rgba(57,198,255,.15);
+  }
+  .switch-tick{
+    position:absolute;
+    width:2px; height:7px;
+    background:var(--muted);
+    border-radius:1px;
+    z-index:2;
+  }
+  .tick-off{ transform: rotate(-30deg) translateY(-18px); }
+  .tick-on{ transform: rotate(30deg) translateY(-18px); }
+  .switch-lever{
+    width:5px; height:18px;
+    background:linear-gradient(#fff2b0,#c99a1e);
+    border-radius:3px;
+    transform-origin:bottom center;
+    transform:translateY(-9px) rotate(-30deg);
+    transition:transform .15s ease, background .15s;
+    box-shadow:0 0 4px rgba(255,213,74,.6);
+    position:relative; z-index:3;
+  }
+  .switch-unit[data-on="true"] .switch-lever{
+    transform:translateY(-9px) rotate(30deg);
+    background:linear-gradient(#baffe0,#22d3a1);
+    box-shadow:0 0 8px rgba(52,224,161,.8);
+  }
+  .switch-unit[data-on="true"] .switch-knob-wrap{
+    box-shadow:
+      0 0 0 2px var(--border-soft),
+      0 0 14px 2px rgba(52,224,161,.55),
+      inset 0 2px 4px rgba(0,0,0,.6);
+  }
+  .switch-label{ font-size:10px; font-weight:800; color:var(--label); }
+  .switch-state{ font-size:8.5px; color:var(--muted); text-align:center; }
+
+  /* ---------- Timer mini panel ---------- */
+  .timer-mini-panel{
+    display:flex; flex-direction:column; gap:3px;
+    background:var(--panel-2); border-radius:5px; padding:5px 7px 6px;
+    box-shadow:inset 0 0 0 1px var(--border-soft);
+    min-width:70px;
+  }
+  .timer-mini-title{
+    font-size:8px; font-weight:800; letter-spacing:.05em;
+    color:var(--accent);
+    text-align:center; margin-bottom:1px;
+  }
+  .timer-mini-row{
+    display:flex; justify-content:space-between; align-items:baseline; gap:6px;
+    font-family:"Consolas",monospace; font-size:9.5px; font-weight:800;
+    color:#4b5b73;
+  }
+  .timer-mini-row .tm-label{ color:var(--muted); font-family:inherit; font-weight:800; font-size:8.5px; }
+  .timer-mini-row .tm-val{ color:inherit; }
+  .timer-mini-row.active{ color:var(--yellow); }
+  .timer-mini-row.active .tm-label{ color:var(--label); }
+
+  /* ---------- Lamps ---------- */
+  .lamp-block{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:12px 6px;
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px solid var(--border-soft);
+  }
+  .lamp-unit{ display:flex; flex-direction:column; align-items:center; gap:4px; flex:0 0 calc(25% - 5px); min-width:44px; }
+  .lamp{
+    width:34px; height:34px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 25%, #16233a, #070c14 75%);
+    box-shadow:
+      0 0 0 2px var(--border-soft),
+      inset 0 2px 3px rgba(0,0,0,.6);
+    transition:all .12s ease;
+    position:relative;
+  }
+  .lamp::after{
+    content:"";
+    position:absolute; top:4px; left:7px; width:10px; height:6px;
+    border-radius:50%;
+    background:rgba(255,255,255,.5);
+    filter:blur(1px);
+    opacity:.35;
+    transition:opacity .12s;
+  }
+  .lamp.on::after{ opacity:1; }
+  .lamp.red.on{ background:radial-gradient(circle at 35% 30%,#ff9a94,#d5261a); box-shadow:0 0 13px 3px rgba(255,71,71,.6), 0 0 0 2px var(--border-soft);}
+  .lamp.green.on{ background:radial-gradient(circle at 35% 30%,#a4ffca,#12a35a); box-shadow:0 0 13px 3px rgba(52,224,161,.6), 0 0 0 2px var(--border-soft);}
+  .lamp.yellow.on{ background:radial-gradient(circle at 35% 30%,#fff2a8,#d1a010); box-shadow:0 0 13px 3px rgba(255,213,74,.65), 0 0 0 2px var(--border-soft);}
+  .lamp.white.on{ background:radial-gradient(circle at 35% 30%,#ffffff,#c9d6e6); box-shadow:0 0 13px 3px rgba(255,255,255,.6), 0 0 0 2px var(--border-soft);}
+  .lamp.blue.on{ background:radial-gradient(circle at 35% 30%,#b7dcff,#1560c9); box-shadow:0 0 13px 3px rgba(90,169,255,.6), 0 0 0 2px var(--border-soft);}
+  .lamp.amber.on{ background:radial-gradient(circle at 35% 30%,#ffd58a,#d97a12); box-shadow:0 0 13px 3px rgba(255,180,84,.6), 0 0 0 2px var(--border-soft);}
+  .lamp-name{ font-size:10px; font-weight:800; color:var(--label); }
+  .lamp-desc{ font-size:8px; color:var(--muted); text-align:center; }
+
+  /* buzzer icon */
+  .buzzer{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 35% 25%, #16233a, #070c14 75%);
+    box-shadow:0 0 0 2px var(--border-soft), inset 0 2px 4px rgba(0,0,0,.6);
+    font-size:16px; transition:all .12s;
+  }
+  .buzzer.on{
+    background:radial-gradient(circle at 35% 30%,#ffd58a,#d97a12);
+    box-shadow:0 0 13px 3px rgba(255,180,84,.65), 0 0 0 2px var(--border-soft);
+    animation:pulse .3s infinite alternate;
+  }
+  @keyframes pulse{ from{transform:scale(1);} to{transform:scale(1.08);} }
+
+  /* ---------- Buttons ---------- */
+  .btn-block{
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .btn-unit{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .pbtn{
+    width:54px;height:54px;border-radius:50%;
+    border:none;
+    cursor:pointer;
+    touch-action:manipulation;
+    background-color:#16233a;
+    box-shadow:
+      0 4px 8px rgba(0,0,0,.5),
+      0 0 0 2px var(--border-soft),
+      inset 0 3px 5px rgba(255,255,255,.08),
+      inset 0 -6px 8px rgba(0,0,0,.4);
+    transition:transform .05s, box-shadow .05s;
+    font-weight:800; color:#fff; font-size:11px;
+    text-shadow:0 1px 2px rgba(0,0,0,.5);
+    position:relative;
+  }
+  .pbtn::after{
+    content:"";
+    position:absolute; top:14%; left:20%; width:34%; height:18%;
+    border-radius:50%;
+    background:rgba(255,255,255,.4);
+    filter:blur(2px);
+    pointer-events:none;
+  }
+  .pbtn:active, .pbtn.pressed{
+    transform:translateY(3px);
+    box-shadow:
+      0 2px 3px rgba(0,0,0,.5),
+      0 0 0 2px var(--border-soft),
+      inset 0 3px 6px rgba(0,0,0,.5);
+  }
+  .pbtn.pb0{ background-image:radial-gradient(circle at 35% 30%,#ff8f8a,#c8241a); }
+  .pbtn.pb1{ background-image:radial-gradient(circle at 35% 30%,#79f0ae,#149c52); }
+  .pbtn.pb2{ background-image:radial-gradient(circle at 35% 30%,#8fc4ff,#1a5fc0); }
+  .btn-label{ font-size:10px; font-weight:800; color:var(--label); }
+  .btn-desc{ font-size:8px; color:var(--muted); }
+
+  /* status / debug */
+  details.status{
+    max-width:1500px; margin:7px auto 0;
+    background:var(--panel); color:var(--card-fg);
+    border:1px solid var(--border-soft);
+    border-radius:10px; padding:7px 12px;
+    font-size:12px;
+  }
+  details.status summary{
+    cursor:pointer; font-weight:700; color:var(--label);
+    list-style:none; display:flex; align-items:center; gap:8px;
+    padding:2px 0;
+  }
+  details.status summary::-webkit-details-marker{ display:none; }
+  details.status summary::before{
+    content:"▶";
+    font-size:9px; color:var(--accent);
+    transition:transform .18s ease;
+    display:inline-block;
+  }
+  details.status[open] summary::before{ transform:rotate(90deg); }
+  details.status[open] summary{ margin-bottom:2px; }
+  #explainDetailToggle > summary{
+    list-style:none; display:inline-flex; align-items:center; gap:5px;
+  }
+  #explainDetailToggle > summary::-webkit-details-marker{ display:none; }
+  #explainDetailToggle > summary::before{
+    content:"▶"; font-size:8px; transition:transform .18s ease; display:inline-block;
+  }
+  #explainDetailToggle[open] > summary::before{ transform:rotate(90deg); }
+  .status-grid{
+    display:grid; grid-template-columns:repeat(2,1fr);
+    gap:4px 12px; margin-top:6px;
+  }
+  .status-grid div{ display:flex; justify-content:space-between; font-family:"Consolas",monospace; font-size:11px; color:var(--card-fg);}
+  .toolbar{
+    max-width:1500px;margin:6px auto 0;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
+  }
+  .tool-btn{
+    font-size:11.5px; padding:5px 11px; border-radius:20px; border:1px solid var(--border-soft);
+    background:var(--panel-2); color:var(--page-fg); cursor:pointer;
+  }
+  .speed-btn.active{
+    background:var(--accent); color:#04101c; border-color:var(--accent); font-weight:800;
+  }
+  .board.replaying .switch-unit, .board.replaying .pbtn, .board.replaying .chip{
+    pointer-events:none; opacity:.55;
+  }
+  details.status > .details-content{
+    display:block;
+    overflow:hidden;
+    max-height:0;
+    opacity:0;
+    transition:max-height .28s ease, opacity .2s ease, margin-top .28s ease;
+  }
+  details.status[open] > .details-content{
+    max-height:4000px;
+    opacity:1;
+    margin-top:8px;
+  }
+  .details-summary-state{
+    margin-left:6px; font-weight:400; color:var(--muted); font-size:10.5px;
+  }
+  .note{
+    max-width:1500px;margin:8px auto 0;font-size:11px;color:var(--muted);line-height:1.5;text-align:left;
+    background:var(--panel-2); border:1px solid var(--border-soft); border-radius:10px; padding:8px 12px;
+  }
+  .timer-set-row{ row-gap:8px; }
+  .timer-set-label{
+    font-size:11.5px; display:inline-flex; align-items:center; gap:5px;
+    background:var(--panel-2); border:1px solid var(--border-soft);
+    border-radius:8px; padding:5px 10px 5px 12px; color:var(--page-fg);
+  }
+  .timer-set-label span{ font-weight:700; color:var(--muted); white-space:nowrap; }
+  .timer-set-label input{
+    width:48px; text-align:right; font-family:"Consolas",monospace; font-size:12px;
+    background:var(--panel); border:1px solid var(--border-soft); border-radius:4px;
+    color:var(--yellow); padding:2px 4px;
+  }
+  @media (min-width:901px){
+    .timer-set-label{ font-size:12px; }
+  }
+  /* ---------- 도면 번호 선택 (binary weighted) — top of 회로도 column ---------- */
+  .diagram-block{
+    position:relative; z-index:1;
+  }
+  .diagram-block-main{
+    margin-top:0;
+  }
+  .diagram-title{
+    color:var(--label);
+    font-size:11px; font-weight:800; letter-spacing:.04em;
+    margin-bottom:6px; display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .diagram-readout{
+    font-family:"Consolas",monospace; font-size:18px; font-weight:800; color:var(--yellow);
+    background:var(--panel-2); padding:2px 10px; border-radius:4px;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 0 0 1px var(--border-soft);
+  }
+  .diagram-readout.invalid{ color:var(--red); }
+  .chip-row{ display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap; margin-bottom:7px; }
+  .chip-unit{ display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:50px; }
+  .chip{
+    width:100%; height:38px; border-radius:5px;
+    background:linear-gradient(180deg,#16233a,#0a121f);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 0 0 1px var(--border-soft);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:14px; color:var(--muted);
+    cursor:pointer; user-select:none; touch-action:manipulation;
+    transition:all .1s;
+  }
+  .chip.on{
+    background:radial-gradient(circle at 35% 25%, #fff0b0, #e2a417);
+    color:#382400;
+    box-shadow:0 0 14px 3px rgba(255,213,74,.6), 0 0 0 1px var(--border-soft);
+  }
+  .chip-name{ font-size:9.5px; font-weight:800; color:var(--label); }
+  .chip-addr{ font-size:8px; color:var(--muted); }
+  /* ---------- 실시간 동력회로 SVG ---------- */
+  .pc-wire{ stroke:#2c3d55; stroke-width:3; fill:none; transition:stroke .2s; }
+  .pc-wire.pc-energized{ stroke:var(--green); filter:drop-shadow(0 0 3px var(--green)); }
+  .pc-blade{ stroke:#3d4f68; stroke-width:4; transition:all .15s ease; }
+  .pc-blade.pc-closed{ stroke:var(--green); filter:drop-shadow(0 0 3px var(--green)); }
+  .pc-contact-frame{ stroke:var(--border-soft); stroke-width:2; fill:none; }
+  .pc-motor-body{ fill:#0d1826; stroke:#3d4f68; stroke-width:2; transition:fill .2s, stroke .2s; }
+  .pc-motor-body.pc-energized{ fill:#0f3322; stroke:var(--green); }
+  .pc-motor-fan.pc-spinning{ animation:pc-spin .6s linear infinite; }
+  @keyframes pc-spin{ to{ transform:rotate(360deg); } }
+  .pc-lbl{ font:11px sans-serif; fill:var(--label); text-anchor:middle; font-weight:700; }
+  .pc-eocr-box{ fill:#16233a; stroke:var(--border-soft); stroke-width:2; transition:fill .2s, stroke .2s; }
+  .pc-eocr-box.pc-tripped{ fill:#4a1620; stroke:var(--red); }
+  .pc-eocr-lbl.pc-tripped{ fill:#ff9a94; }
+  /* ---------- 원본 도면 이미지 뷰어 ---------- */
+  .diagram-image-wrap{
+    background:var(--panel-2);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+    padding:8px;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.5);
+    text-align:center;
+  }
+  .diagram-image-title{
+    font-size:10px; font-weight:800; color:var(--label);
+    margin-bottom:6px; text-align:left;
+    display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;
+  }
+  .run-status-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:10px; font-weight:800; color:var(--green);
+    background:rgba(52,224,161,.08);
+    border:1px solid rgba(52,224,161,.3);
+    border-radius:20px;
+    padding:3px 9px;
+  }
+  .run-status-dot{
+    width:6px; height:6px; border-radius:50%; background:var(--green);
+    box-shadow:0 0 6px 1px rgba(52,224,161,.9);
+    display:inline-block;
+  }
+  .power-circuit-svg{ width:100%; max-width:420px; display:block; margin:0 auto; transition:max-width .2s ease; }
+  .run-status-badge.trip{
+    color:var(--red);
+    background:rgba(255,93,108,.1);
+    border-color:rgba(255,93,108,.4);
+  }
+  .run-status-badge.trip .run-status-dot{
+    background:var(--red);
+    box-shadow:0 0 6px 1px rgba(255,93,108,.9);
+    animation:pulse .4s infinite alternate;
+  }
+  .diagram-image-stage{ position:relative; display:inline-block; max-width:100%; }
+  .diagram-image{
+    display:none;
+    max-width:100%; height:auto; vertical-align:top;
+    border-radius:3px;
+    background:#fff;
+    cursor:zoom-in;
+    box-shadow:0 2px 8px rgba(0,0,0,.5);
+  }
+  .diagram-image.show{ display:inline-block; }
+  .diagram-overlay{
+    position:absolute; inset:0; width:100%; height:100%;
+    pointer-events:none; display:none;
+  }
+  .diagram-overlay.show{ display:block; }
+  .diagram-overlay .rail{ stroke:#c9ccd1; stroke-width:5; opacity:0; }
+  .diagram-overlay .rail.on{
+     stroke:#ff3b30; stroke-width:3; opacity:.9; 
+     stroke-dasharray:8 6; animation:dOverlayFlow .65s linear infinite;
+     filter:
+        drop-shadow(0 0 2px rgba(255,59,48,.9)) 
+        drop-shadow(0 0 5px rgba(255,59,48,.45));
+    }
+  .diagram-overlay .wire{ fill:none; stroke:#ff3b30; stroke-width:3; stroke-linecap:round; opacity:0; }
+  .diagram-overlay .wire.on{
+    opacity:1;
+
+    /* 짧은 전류 입자 */
+    stroke-dasharray:8 6;
+
+    /* 실제 흐르는 느낌 */
+    animation:dOverlayFlow .65s linear infinite;
+
+    /* 약한 발광 */
+    filter:
+        drop-shadow(0 0 2px rgba(255,59,48,.95)) 
+        drop-shadow(0 0 5px rgba(255,59,48,.55));
+  }
+  @keyframes dOverlayFlow{ from{stroke-dashoffset:0;} to{stroke-dashoffset:-20;} }
+
+  .diagram-overlay .ground-wire{ fill:none; stroke:#19c96b; stroke-width:3; stroke-linecap:round; opacity:0; }
+  .diagram-overlay .ground-wire.on{ opacity:.95; filter:drop-shadow(0 0 3px rgba(25,201,107,.55)); }
+  .diagram-overlay .coil-ring{ fill:none; stroke:#c9ccd1; stroke-width:0; opacity:0; }
+  .diagram-overlay .coil-ring.on{ stroke:#ff3b30; stroke-width:6; opacity:1; filter: drop-shadow(0 0 6px rgba(255,59,48,.55)); }
+  .diagram-overlay .fr-contact{ stroke:#9aa1ab; stroke-width:4; stroke-linecap:round; opacity:.55; }
+  .diagram-overlay .fr-contact.on{ stroke:#ff3b30; stroke-width:6; opacity:1; filter: drop-shadow(0 0 6px rgba(255,59,48,.55)); }
+  .diagram-image-empty{
+    font-size:11px; color:var(--muted); padding:18px 8px;
+  }
+  .diagram-image-empty.hide{ display:none; }
+  .diagram-live-row{
+    display:none;
+    margin-top:10px; padding-top:10px;
+    border-top:1px dashed var(--border-soft);
+    overflow-x:auto; white-space:nowrap;
+    -webkit-overflow-scrolling:touch;
+  }
+  .diagram-live-row.show{ display:flex; gap:8px; position:relative; padding-top:14px; }
+  .diagram-live-row.show::before{
+    content:''; position:absolute; left:14px; right:14px; top:24px; height:2px;
+    background:var(--border-soft); z-index:0;
+  }
+  .dlr-unit{ display:inline-flex; flex-direction:column; align-items:center; gap:4px; flex:0 0 auto; position:relative; z-index:1; }
+  .dlr-dot{
+    width:26px; height:26px; border-radius:50%;
+    border:2px solid var(--border-soft); background:var(--panel);
+    display:flex; align-items:center; justify-content:center;
+    font-size:8px; font-weight:800; color:var(--muted);
+    transition:all .2s;
+  }
+  .dlr-dot.on{ border-color:var(--green); background:#0f3322; color:#eafff0; }
+  .dlr-dot.trip{ border-color:var(--red); background:#4a1620; color:#ffd9d4; }
+  .dlr-label{ font-size:8px; color:var(--muted); font-weight:700; }
+  /* 확대보기 라이트박스 */
+  .lightbox{
+    display:none;
+    position:fixed; inset:0; z-index:999;
+    background:rgba(0,0,0,.88);
+    align-items:center; justify-content:center;
+    padding:16px;
+    cursor:zoom-out;
+  }
+  .lightbox.open{ display:flex; }
+  .lightbox img{
+    max-width:100%; max-height:100%;
+    border-radius:4px;
+    box-shadow:0 10px 40px rgba(0,0,0,.6);
+  }
+  /* ---------- 내부 릴레이/타이머 표시등 ---------- */
+  .internal-row{ display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap; }
+  .relay-unit{ display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; min-width:38px; }
+  .relay-led{
+    width:20px; height:20px; border-radius:50%;
+    background:radial-gradient(circle at 35% 25%, #16233a, #070c14 75%);
+    box-shadow:0 0 0 2px var(--border-soft);
+    transition:all .15s;
+    opacity:.75;
+  }
+  .relay-led.on{
+    opacity:1;
+    background:radial-gradient(circle at 35% 30%,#a4ffca,#149c52);
+    box-shadow:0 0 11px 3px rgba(52,224,161,.6), 0 0 0 2px rgba(52,224,161,.55);
+  }
+  .relay-led.timer-led.on{
+    background:radial-gradient(circle at 35% 30%,#ffd58a,#d97a12);
+    box-shadow:0 0 11px 3px rgba(255,180,84,.6), 0 0 0 2px rgba(255,180,84,.55);
+  }
+  .relay-name{ font-size:9px; font-weight:800; color:var(--label); }
+
+  /* ---------- 반응형 오버라이드 (베이스 규칙 뒤에 위치해야 우선 적용됨) ---------- */
+  @media (min-width:901px){
+    .diagram-select{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+    .diagram-select::before{ margin-bottom:0; flex:0 0 auto; }
+    .diagram-title{ flex:0 0 auto; flex-direction:column; align-items:flex-start; gap:6px; min-width:170px; margin-bottom:0; }
+    .chip-row{ flex:1 1 320px; min-width:0; margin-bottom:0; }
+    .chip{ height:54px; font-size:20px; border-radius:8px; min-width:0; }
+    .chip-unit{ min-width:40px; }
+    .chip-name{ font-size:11px; }
+    .diagram-readout{ font-size:22px; padding:4px 14px; }
+    .diagram-select, .internal-block, .rail-left{ padding:16px; }
+    .pbtn{ width:64px; height:64px; font-size:12px; }
+    .switch-knob-wrap{ width:54px; height:54px; }
+    .lamp, .buzzer{ width:40px; height:40px; }
+    .lamp-name{ font-size:11px; }
+  }
+  @media (max-width:840px) and (orientation:portrait){
+    .board-grid{ grid-template-columns:1fr; }
+    .diagram-select{ grid-column:1; grid-row:1; }
+    .internal-block{ grid-column:1; grid-row:2; }
+    .diagram-image-wrap{ grid-column:1; grid-row:3; }
+    .rail-left{ grid-column:1; grid-row:4; }
+  }
+  @media (orientation:landscape) and (max-height:600px){
+    .board{ padding:10px 10px 14px; }
+    .board-grid{ grid-template-columns: 1.35fr 1fr; gap:10px; }
+    .diagram-select{ grid-column:1; grid-row:1; display:block; }
+    .diagram-select .diagram-title{ flex-direction:row; min-width:0; margin-bottom:8px; }
+    .internal-block{ grid-column:2; grid-row:1; }
+    .diagram-image-wrap{ grid-column:1; grid-row:2 / span 3; }
+    .rail-left{ grid-column:2; grid-row:2; }
+    .diagram-select, .internal-block, .rail-left{ padding:9px; }
+    .diagram-select::before, .internal-block::before, .rail-left::before, .diagram-image-wrap::before{
+      font-size:10px; margin-bottom:6px; padding:4px 9px;
+    }
+    .pbtn{ width:48px; height:48px; font-size:10px; }
+    .switch-knob-wrap{ width:42px; height:42px; }
+    .lamp, .buzzer{ width:30px; height:30px; }
+    .chip{ height:36px; font-size:14px; }
+    .diagram-readout{ font-size:16px; padding:3px 10px; }
+    .btn-block{ gap:10px; }
+    .switch-row{ gap:8px; }
+    .run-status-badge{ font-size:9px; padding:2px 7px; }
+    .power-circuit-svg{ max-width:640px; }
+  }
