@@ -300,7 +300,7 @@ const DIAGRAM1_REAL_FLOW = [
   {id:'return-bus',     state:'controlPower', points:[[489,820],[1570,820]]},
 
   // EOCR 트립 표시/FR 점멸 계통 (원본 좌측 가지) — 실측 결과 중간 가로선은 y=496, 618
-  {id:'trip-feed',      state:'tripAny',      points:[[593,292],[593,496],[674,496],[674,618]]},
+  {id:'trip-feed',      state:'eocrTripContact', points:[[593,292],[593,496],[674,496],[674,618]]},
   {id:'fr-coil-feed',   state:'fr',           points:[[674,618],[674,720]]},
   {id:'fr-return',      state:'fr',           points:[[674,780],[674,820]]},
   {id:'yl-feed',        state:'yl',           points:[[674,618],[755,618],[755,720]]},
@@ -309,7 +309,6 @@ const DIAGRAM1_REAL_FLOW = [
   {id:'bz-return',      state:'bz',           points:[[837,780],[837,820]]},
 
   // FLS 입력 표시 가지
-  {id:'eocr-mid-branch', state:'eocrNormal', points:[[593,496],[674,496]]},
   {id:'fls-ind-feed',   state:'fls',          points:[[1081,496],[919,496],[919,720]]},
   {id:'fls-ind-return', state:'fls',          points:[[919,780],[919,820]]},
 
@@ -359,18 +358,28 @@ function diagram1FlowStates(){
   const fls = !!ui.fls;
   const controlPower = true;
   const eocrNormal = !ui.eocr;
+  // EOCR 트립 접점(과부하 시 닫히는 접점) 자신의 상태 — 뒷단 FR/YL/BZ 결과를 기다리지 않음
+  const eocrTripContact = !!ui.eocr;
 
-  // 실제 운전 공통선에 부하가 붙어 있는 동안만 전류 입자를 표시
-  const runBus = t || mc1 || mc2;
-  const manualRun = !ui.eocr && !ui.ss && !ui.pb0 && runBus;
+  // 접점 하나하나의 통전 여부는 "그 접점 자신의 조건"만으로 판단한다.
+  // (예: X의 a접점은 X 코일 자신이 여자되면 바로 닫힌 것으로 표시 —
+  //  뒤쪽 MC1/T가 실제로 켜졌는지와는 무관하게, 접점 자체는 이미 닫혀 있음)
+  // manual-common: SS가 M 위치 + 정지(PB0) 안 눌림 + EOCR 정상이면 이 구간까지는 항상 통전
+  const manualRun = !ui.eocr && !ui.ss && !ui.pb0;
+  // PB1을 누르는 순간 그 접점 자체가 닫힘 (뒷단 결과를 기다리지 않음)
   const manualPB1 = manualRun && !!ui.pb1;
+  // 자기유지 접점(hold)도 PB1을 안 누른 상태에서 hold 비트가 서있으면 그 자체로 닫힘
   const manualHold = manualRun && !ui.pb1 && hold;
-  const autoRun = !ui.eocr && x && runBus;
+  // 자동 X의 a접점: X 코일이 여자되면 그 즉시 접점 닫힘 (EOCR 정상일 때)
+  const autoRun = !ui.eocr && x;
+  // 운전 공통선(run-bus)은 위 세 접점 경로 중 하나라도 실제로 닫혀 있으면 통전
+  // (뒷단 MC1/T 출력을 거꾸로 참조하지 않고, 앞단 접점들의 OR로 순방향 계산)
+  const runBus = manualPB1 || manualHold || autoRun;
   const tripAny = fr || yl || bz;
   const normalAny = x || fls || runBus || mc1 || mc2;
   const any = tripAny || normalAny;
 
-  return { controlPower, eocrNormal, any, normalAny, tripAny, fr, yl, bz, fls, x, t, mc1, mc2,
+  return { controlPower, eocrNormal, eocrTripContact, any, normalAny, tripAny, fr, yl, bz, fls, x, t, mc1, mc2,
            runBus, manualRun, manualPB1, manualHold, autoRun };
 }
 
