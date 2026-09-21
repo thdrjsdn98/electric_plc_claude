@@ -807,9 +807,433 @@ const DIAGRAM12_REAL_FLOW = [
 
 
 
+// ==================== 도면 13 ====================
+// X1 = common&&(PB1||X1자신||LS1)&&!T2완료. MC1은 X1&&LS2(교차).
+// X2 = common&&(PB2||X2자신||T1완료). MC2는 X2 직결(무조건). T2인에이블=X2&&X1(둘다 필요).
+function diagram13FlowStates(){
+  const x1=overlayTerminalOn(dlrResolve(13,'X1')), x2=overlayTerminalOn(dlrResolve(13,'X2'));
+  const t1=overlayTerminalOn(dlrResolve(13,'T1')), t2=overlayTerminalOn(dlrResolve(13,'T2'));
+  const mc1=overlayTerminalOn(dlrResolve(13,'MC1')), mc2=overlayTerminalOn(dlrResolve(13,'MC2'));
+  const wl=overlayTerminalOn(dlrResolve(13,'WL'));
+  const controlPower=true, eocrNormal=!ui.eocr, eocrTrip=!!ui.eocr;
+  const common = !ui.eocr && !ui.pb0;
+  const pb1c = common && !!ui.pb1;
+  const x1selfc = common && x1;
+  const ls1c = common && !!ui.ls1;
+  const ls2c = x1 && !!ui.ls2;         // MC1은 LS2로 게이트(교차)
+  const mc1ncFeedT1 = x1 && !mc1;      // 대기표시용 M00003
+  const pb2c = common && !!ui.pb2;
+  const x2selfc = common && x2;
+  const t1selfc = common && t1;
+  const x1FeedT2 = x2 && x1;           // T2 인에이블 = X2&&X1 (M00004)
+  return { controlPower, eocrNormal, eocrTrip, common, pb1c, x1selfc, ls1c, ls2c, mc1ncFeedT1,
+           pb2c, x2selfc, t1selfc, x1FeedT2, x1, x2, t1, t2, mc1, mc2, wl };
+}
+
+const DIAGRAM13_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[489,292],[634,292]]},
+  {id:'feed-eocr-pb0', state:'eocrNormal', points:[[634,292],[715,292]]},
+  {id:'feed-common', state:'common', points:[[715,292],[1529,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[489,822],[1529,822]]},
+
+  {id:'eocr-feed',   state:'controlPower', points:[[593,288],[593,741]]},
+  {id:'eocr-return', state:'controlPower', points:[[593,781],[593,825]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,618],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+
+  {id:'pb1-contact', state:'pb1c',   points:[[796,289],[796,333]]},
+  {id:'x1-self-contact', state:'x1selfc', points:[[878,289],[878,333]]},
+  {id:'ls1-contact', state:'ls1c', points:[[959,289],[959,333]]},
+  {id:'x1-merge-bridge', state:'x1', points:[[796,373],[959,373]]},
+  {id:'x1-common',   state:'x1', points:[[796,373],[796,741]]},
+  {id:'x1-return',   state:'x1', points:[[796,781],[796,825]]},
+  {id:'x1-branch',   state:'x1', points:[[796,536],[959,536]]},
+  {id:'ls2-contact', state:'ls2c', points:[[878,615],[878,659]]},
+  {id:'mc1-feed',    state:'mc1', points:[[878,700],[878,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[878,781],[878,825]]},
+  {id:'mc1nc-contact', state:'mc1ncFeedT1', points:[[959,618],[959,659]]},
+  {id:'t1-feed',     state:'t1',  points:[[959,700],[959,741]]},
+  {id:'t1-return',   state:'t1',  points:[[959,781],[959,825]]},
+
+  {id:'pb2-contact', state:'pb2c',   points:[[1041,289],[1041,333]]},
+  {id:'x2-self-contact', state:'x2selfc', points:[[1122,289],[1122,333]]},
+  {id:'t1-self-contact', state:'t1selfc', points:[[1203,289],[1203,333]]},
+  {id:'x2-merge-bridge', state:'x2', points:[[1041,373],[1203,373]]},
+  {id:'x2-common',   state:'x2', points:[[1041,373],[1041,741]]},
+  {id:'x2-return',   state:'x2', points:[[1041,781],[1041,825]]},
+  {id:'x2-to-mc2',   state:'x2', points:[[1041,618],[1122,618]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1122,700],[1122,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1122,781],[1122,825]]},
+  {id:'x2-to-t2',    state:'x1FeedT2', points:[[1041,618],[1203,618]]},
+  {id:'t2-feed',     state:'t2',  points:[[1203,700],[1203,741]]},
+  {id:'t2-return',   state:'t2',  points:[[1203,781],[1203,825]]},
+
+  {id:'wl-t1-contact', state:'mc1ncFeedT1', points:[[1285,289],[1285,333]]},
+  {id:'wl-t2-contact', state:'x1FeedT2', points:[[1366,289],[1366,333]]},
+  {id:'wl-merge-bridge', state:'wl', points:[[1285,373],[1366,373]]},
+  {id:'wl-feed',        state:'wl', points:[[1285,373],[1285,741]]},
+  {id:'wl-return',      state:'wl', points:[[1285,781],[1285,825]]},
+
+  {id:'mc1-aux-rl',  state:'mc1', points:[[1448,289],[1448,741]]},
+  {id:'rl-return',   state:'mc1', points:[[1448,781],[1448,825]]},
+  {id:'mc2-aux-gl',  state:'mc2', points:[[1529,289],[1529,741]]},
+  {id:'gl-return',   state:'mc2', points:[[1529,781],[1529,825]]},
+];
 
 
 
+// ==================== 도면 14 ====================
+// X1=common&&LS1, X2=common&&LS2 (단순 직결 게이트, 자기유지 아님).
+// MC1=common&&(PB1||자기유지)&&X1&&X2&&!T1완료 (LS1,LS2 둘다 필요).
+// MC2=common&&(PB2||자기유지)&&(X1||X2)&&!T2완료 (LS1,LS2 둘중 하나).
+// WL=common&&!MC1&&!MC2 (둘다 정지중 표시).
+function diagram14FlowStates(){
+  const x1=overlayTerminalOn(dlrResolve(14,'X1')), x2=overlayTerminalOn(dlrResolve(14,'X2'));
+  const t1=overlayTerminalOn(dlrResolve(14,'T1')), t2=overlayTerminalOn(dlrResolve(14,'T2'));
+  const mc1=overlayTerminalOn(dlrResolve(14,'MC1')), mc2=overlayTerminalOn(dlrResolve(14,'MC2'));
+  const wl=overlayTerminalOn(dlrResolve(14,'WL'));
+  const m3 = !!plc.get('M00003'), m4 = !!plc.get('M00004');
+  const controlPower=true, eocrNormal=!ui.eocr, eocrTrip=!!ui.eocr;
+  const common = !ui.eocr && !ui.pb0;
+  const ls1c = common && !!ui.ls1;
+  const ls2c = common && !!ui.ls2;
+  const manualBranch1 = common && (!!ui.pb1 || m3);
+  const x1x2gate1 = manualBranch1 && x1 && x2;
+  const manualBranch2 = common && (!!ui.pb2 || m4);
+  const x1orx2gate2 = manualBranch2 && (x1 || x2);
+  const mc1ncFeedWl = common && !mc1;
+  return { controlPower, eocrNormal, eocrTrip, common, ls1c, ls2c, manualBranch1, x1x2gate1,
+           manualBranch2, x1orx2gate2, mc1ncFeedWl, x1, x2, t1, t2, mc1, mc2, wl };
+}
+
+const DIAGRAM14_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[489,292],[634,292]]},
+  {id:'feed-eocr-pb0', state:'eocrNormal', points:[[634,292],[715,292]]},
+  {id:'feed-common', state:'common', points:[[715,292],[1448,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[489,822],[1448,822]]},
+
+  {id:'eocr-feed',   state:'controlPower', points:[[593,288],[593,741]]},
+  {id:'eocr-return', state:'controlPower', points:[[593,781],[593,825]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,373],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+
+  {id:'ls1-contact', state:'ls1c', points:[[796,289],[796,333]]},
+  {id:'x1-feed',     state:'ls1c', points:[[796,373],[796,741]]},
+  {id:'x1-return',   state:'x1',   points:[[796,781],[796,825]]},
+  {id:'ls2-contact', state:'ls2c', points:[[878,289],[878,333]]},
+  {id:'x2-feed',     state:'ls2c', points:[[878,373],[878,741]]},
+  {id:'x2-return',   state:'x2',   points:[[878,781],[878,825]]},
+
+  {id:'pb1-contact', state:'manualBranch1', points:[[959,289],[959,333]]},
+  {id:'t1-self-contact', state:'manualBranch1', points:[[1041,289],[1041,333]]},
+  {id:'mc1-merge-bridge', state:'manualBranch1', points:[[959,373],[1041,373]]},
+  {id:'mc1-common',  state:'manualBranch1', points:[[959,373],[959,496]]},
+  {id:'x1-contact-mc1', state:'manualBranch1', points:[[959,496],[959,537]]},
+  {id:'x2-contact-mc1', state:'x1x2gate1', points:[[959,577],[959,618]]},
+  {id:'mc1-feed',    state:'mc1', points:[[959,659],[959,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[959,781],[959,825]]},
+  {id:'mc1-to-t1-bridge', state:'mc1', points:[[959,618],[1041,618]]},
+  {id:'t1-feed',     state:'t1', points:[[1041,700],[1041,741]]},
+  {id:'t1-return',   state:'t1', points:[[1041,781],[1041,825]]},
+
+  {id:'pb2-contact', state:'manualBranch2', points:[[1203,289],[1203,333]]},
+  {id:'t2-self-contact', state:'manualBranch2', points:[[1285,289],[1285,333]]},
+  {id:'mc2-merge-bridge', state:'manualBranch2', points:[[1203,373],[1285,373]]},
+  {id:'mc2-common',  state:'manualBranch2', points:[[1203,373],[1203,496]]},
+  {id:'x1-contact-mc2', state:'manualBranch2', points:[[1203,496],[1203,618]]},
+  {id:'x2-contact-mc2', state:'manualBranch2', points:[[1285,496],[1285,537]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1203,659],[1203,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1203,781],[1203,825]]},
+  {id:'mc2-to-t2-bridge', state:'mc2', points:[[1203,618],[1285,618]]},
+  {id:'t2-feed',     state:'t2', points:[[1285,700],[1285,741]]},
+  {id:'t2-return',   state:'t2', points:[[1285,781],[1285,825]]},
+
+  {id:'rl-feed',     state:'mc1', points:[[1122,289],[1122,741]]},
+  {id:'rl-return',   state:'mc1', points:[[1122,781],[1122,825]]},
+  {id:'gl-feed',     state:'mc2', points:[[1366,289],[1366,741]]},
+  {id:'gl-return',   state:'mc2', points:[[1366,781],[1366,825]]},
+
+  {id:'wl-mc1nc',    state:'common', points:[[1448,373],[1448,414]]},
+  {id:'wl-mc2nc',    state:'mc1ncFeedWl', points:[[1448,455],[1448,741]]},
+  {id:'wl-return',   state:'wl', points:[[1448,781],[1448,825]]},
+];
+
+
+
+// ==================== 도면 15 ====================
+// X1=common&&LS1, X2=common&&LS2 (도면14와 동일한 단순 게이트).
+// MC1=common&&((PB1&&(X1 OR X2))||자기유지)&&!T1완료 — X1/X2 병렬.
+// MC2=common&&((PB2&&X1&&X2)||자기유지)&&!T2완료 — X1/X2 직렬(도면14와 반대).
+// WL=common&&!MC1&&!MC2.
+function diagram15FlowStates(){
+  const x1=overlayTerminalOn(dlrResolve(15,'X1')), x2=overlayTerminalOn(dlrResolve(15,'X2'));
+  const t1=overlayTerminalOn(dlrResolve(15,'T1')), t2=overlayTerminalOn(dlrResolve(15,'T2'));
+  const mc1=overlayTerminalOn(dlrResolve(15,'MC1')), mc2=overlayTerminalOn(dlrResolve(15,'MC2'));
+  const wl=overlayTerminalOn(dlrResolve(15,'WL'));
+  const m3 = !!plc.get('M00003'), m4 = !!plc.get('M00004');
+  const controlPower=true, eocrNormal=!ui.eocr, eocrTrip=!!ui.eocr;
+  const common = !ui.eocr && !ui.pb0;
+  const ls1c = common && !!ui.ls1;
+  const ls2c = common && !!ui.ls2;
+  const pb1c = common && !!ui.pb1;
+  const pb1x1orx2 = pb1c && (x1 || x2);       // MC1측: PB1 뒤 X1 OR X2(병렬)
+  const mc1selfOr = pb1x1orx2 || m3;
+  const pb2c = common && !!ui.pb2;
+  const pb2x1andx2 = pb2c && x1 && x2;        // MC2측: PB2 뒤 X1 AND X2(직렬)
+  const mc2selfOr = pb2x1andx2 || m4;
+  const mc1ncFeedWl = common && !mc1;
+  return { controlPower, eocrNormal, eocrTrip, common, ls1c, ls2c, pb1c, pb1x1orx2, mc1selfOr,
+           pb2c, pb2x1andx2, mc2selfOr, mc1ncFeedWl, x1, x2, t1, t2, mc1, mc2, wl };
+}
+
+const DIAGRAM15_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[489,292],[634,292]]},
+  {id:'feed-eocr-pb0', state:'eocrNormal', points:[[634,292],[715,292]]},
+  {id:'feed-common', state:'common', points:[[715,292],[1529,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[489,822],[1529,822]]},
+
+  {id:'eocr-feed',   state:'controlPower', points:[[593,288],[593,741]]},
+  {id:'eocr-return', state:'controlPower', points:[[593,781],[593,825]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,373],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+
+  {id:'ls1-contact', state:'ls1c', points:[[796,289],[796,333]]},
+  {id:'x1-feed',     state:'ls1c', points:[[796,373],[796,741]]},
+  {id:'x1-return',   state:'x1',   points:[[796,781],[796,825]]},
+  {id:'ls2-contact', state:'ls2c', points:[[878,289],[878,333]]},
+  {id:'x2-feed',     state:'ls2c', points:[[878,373],[878,741]]},
+  {id:'x2-return',   state:'x2',   points:[[878,781],[878,825]]},
+
+  // MC1 계열: PB1 -> X1/X2 병렬 -> 병합 -> T1자기유지OR -> MC1코일/T1코일
+  {id:'pb1-contact', state:'pb1c', points:[[959,289],[959,333]]},
+  {id:'x1-contact-mc1', state:'pb1c', points:[[959,373],[959,414]]},
+  {id:'x2-contact-mc1', state:'pb1c', points:[[1041,373],[1041,414]]},
+  {id:'mc1-parallel-merge', state:'pb1x1orx2', points:[[959,455],[1041,455]]},
+  {id:'mc1-common',  state:'mc1selfOr', points:[[959,496],[959,618]]},
+  {id:'mc1-feed',    state:'mc1', points:[[959,659],[959,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[959,781],[959,825]]},
+  {id:'mc1-to-t1-bridge', state:'mc1selfOr', points:[[959,618],[1041,618]]},
+  {id:'t1-feed',     state:'t1', points:[[1041,700],[1041,741]]},
+  {id:'t1-return',   state:'t1', points:[[1041,781],[1041,825]]},
+
+  // MC2 계열: PB2 -> X1 -> X2 직렬 -> T2자기유지OR -> MC2코일/T2코일
+  {id:'pb2-contact', state:'pb2c', points:[[1285,289],[1285,333]]},
+  {id:'x1-contact-mc2', state:'pb2c', points:[[1285,373],[1285,414]]},
+  {id:'x2-contact-mc2', state:'pb2x1andx2', points:[[1285,455],[1285,496]]},
+  {id:'mc2-common',  state:'mc2selfOr', points:[[1285,536],[1285,618]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1285,659],[1285,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1285,781],[1285,825]]},
+  {id:'mc2-to-t2-bridge', state:'mc2selfOr', points:[[1285,618],[1366,618]]},
+  {id:'t2-feed',     state:'t2', points:[[1366,700],[1366,741]]},
+  {id:'t2-return',   state:'t2', points:[[1366,781],[1366,825]]},
+
+  {id:'rl-feed',     state:'mc1', points:[[1203,289],[1203,741]]},
+  {id:'rl-return',   state:'mc1', points:[[1203,781],[1203,825]]},
+  {id:'gl-feed',     state:'mc2', points:[[1448,289],[1448,741]]},
+  {id:'gl-return',   state:'mc2', points:[[1448,781],[1448,825]]},
+
+  {id:'wl-mc1nc',    state:'common', points:[[1529,373],[1529,414]]},
+  {id:'wl-mc2nc',    state:'mc1ncFeedWl', points:[[1529,455],[1529,741]]},
+  {id:'wl-return',   state:'wl', points:[[1529,781],[1529,825]]},
+];
+
+
+
+// ==================== 도면 4 ====================
+// 도면 1~3과 같은 SS 자동/수동 구조. X = (A&&FLS) OR (M&&PB0안눌림&&(PB1||자기유지)).
+// FR은 "긴FR"(T0003, 14초 주기) 타이머로 대체되었고, MC1/MC2는 그 경과시간 구간으로 결정.
+function diagram4FlowStates(){
+  const x=overlayTerminalOn(dlrResolve(4,'X'));
+  const fr=overlayTerminalOn(dlrResolve(4,'FR'));
+  const mc1=overlayTerminalOn(dlrResolve(4,'MC1')), mc2=overlayTerminalOn(dlrResolve(4,'MC2'));
+  const t=overlayTerminalOn(dlrResolve(4,'T'));
+  const fls=!!ui.fls;
+  const controlPower=true, eocrNormal=!ui.eocr, eocrTrip=!!ui.eocr;
+  const ssAuto = !ui.eocr && !!ui.ss;
+  const ssManual = !ui.eocr && !ui.ss;
+  const autoBranch = ssAuto && !!ui.fls;
+  const manualPastPB0 = ssManual && !ui.pb0;
+  const manualBranch = manualPastPB0 && (!!ui.pb1 || x);
+  const merged = autoBranch || manualBranch;
+  return { controlPower, eocrNormal, eocrTrip, ssAuto, ssManual, autoBranch,
+           manualPastPB0, manualBranch, merged, x, fr, mc1, mc2, t, fls };
+}
+
+const DIAGRAM4_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[511,292],[634,292]]},
+  {id:'feed-normal', state:'eocrNormal',   points:[[674,292],[1570,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[511,822],[1570,822]]},
+
+  {id:'eocr-feed',   state:'eocrTrip', points:[[593,288],[593,741]]},
+  {id:'eocr-return', state:'eocrTrip', points:[[593,781],[593,825]]},
+  {id:'yl-branch',   state:'eocrTrip', points:[[589,536],[674,536]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,618],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+  {id:'bz-branch',   state:'eocrTrip', points:[[671,659],[756,659]]},
+  {id:'bz-feed',     state:'eocrTrip', points:[[756,659],[756,825]]},
+
+  {id:'auto-a',      state:'ssAuto',     points:[[1000,288],[1000,333]]},
+  {id:'auto-fls',    state:'autoBranch', points:[[1000,373],[1000,618]]},
+  {id:'merge-bridge', state:'merged',    points:[[997,618],[1089,618]]},
+  {id:'fr-feed',     state:'fr',  points:[[1000,618],[1000,741]]},
+  {id:'fr-return',   state:'fr',  points:[[1000,781],[1000,825]]},
+
+  {id:'manual-m',    state:'ssManual',      points:[[1081,288],[1081,333]]},
+  {id:'manual-pb0',  state:'ssManual',      points:[[1081,373],[1081,414]]},
+  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1081,455],[1081,537]]},
+  {id:'manual-pb1hold', state:'manualBranch',  points:[[1081,577],[1081,618]]},
+  {id:'x-feed',      state:'x', points:[[1081,618],[1081,741]]},
+  {id:'x-return',    state:'x', points:[[1081,781],[1081,825]]},
+
+  {id:'x-contact',   state:'x', points:[[1244,289],[1244,333]]},
+  {id:'mc1-feed',    state:'mc1', points:[[1244,373],[1244,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[1244,781],[1244,825]]},
+  {id:'x-to-mc2-bridge', state:'x', points:[[1244,496],[1326,496]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1326,537],[1326,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1326,781],[1326,825]]},
+  {id:'mc2-to-t-bridge', state:'t', points:[[1326,618],[1407,618]]},
+  {id:'t-feed',      state:'t', points:[[1407,618],[1407,741]]},
+  {id:'t-return',    state:'t', points:[[1407,781],[1407,825]]},
+
+  {id:'rl-feed',    state:'mc1', points:[[1489,289],[1489,741]]},
+  {id:'rl-return',  state:'mc1', points:[[1489,781],[1489,825]]},
+  {id:'gl-feed',    state:'mc2', points:[[1570,293],[1570,741]]},
+  {id:'gl-return',  state:'mc2', points:[[1570,781],[1570,825]]},
+];
+
+
+
+// ==================== 도면 5 ====================
+// 도면 1~4와 같은 SS 자동/수동 구조지만 상단 공통선이 y=251(다른 도면보다 41px 위).
+// X=(A&&FLS)OR(M&&!PB0&&(PB1||자기유지)). T는 X와 동일하게 바로 여자.
+// FR은 T·T0000 모두 완료 전까지만 돎, MC1은 FR구간1, MC2는 FR구간2 OR T완료.
+function diagram5FlowStates(){
+  const x=overlayTerminalOn(dlrResolve(5,'X'));
+  const t=overlayTerminalOn(dlrResolve(5,'T'));
+  const fr=overlayTerminalOn(dlrResolve(5,'FR'));
+  const mc1=overlayTerminalOn(dlrResolve(5,'MC1')), mc2=overlayTerminalOn(dlrResolve(5,'MC2'));
+  const fls=!!ui.fls;
+  const controlPower=true, eocrNormal=!ui.eocr, eocrTrip=!!ui.eocr;
+  const ssAuto = !ui.eocr && !!ui.ss;
+  const ssManual = !ui.eocr && !ui.ss;
+  const autoBranch = ssAuto && !!ui.fls;
+  const manualPastPB0 = ssManual && !ui.pb0;
+  const manualBranch = manualPastPB0 && (!!ui.pb1 || x);
+  const merged = autoBranch || manualBranch;
+  return { controlPower, eocrNormal, eocrTrip, ssAuto, ssManual, autoBranch,
+           manualPastPB0, manualBranch, merged, x, t, fr, mc1, mc2, fls };
+}
+
+const DIAGRAM5_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[489,251],[593,251]]},
+  {id:'feed-normal', state:'eocrNormal',   points:[[593,251],[1570,251]]},
+  {id:'return-bus',  state:'controlPower', points:[[489,822],[1570,822]]},
+
+  {id:'eocr-feed',   state:'eocrTrip', points:[[593,247],[593,741]]},
+  {id:'eocr-return', state:'eocrTrip', points:[[593,781],[593,825]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,577],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+  {id:'bz-feed',     state:'eocrTrip', points:[[756,577],[756,741]]},
+  {id:'bz-return',   state:'eocrTrip', points:[[756,781],[756,825]]},
+
+  // 자동(A) 경로: A -> FLS 접점(직렬) -> 병합버스
+  {id:'auto-a',      state:'ssAuto',     points:[[837,248],[837,292]]},
+  {id:'auto-fls',    state:'autoBranch', points:[[837,332],[837,577]]},
+
+  // 수동(M) 경로: M -> PB0 -> PB1/자기유지 -> 병합버스
+  {id:'manual-m',    state:'ssManual',      points:[[1081,248],[1081,292]]},
+  {id:'manual-pb0',  state:'ssManual',      points:[[1081,332],[1081,374]]},
+  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1081,414],[1081,496]]},
+  {id:'manual-pb1hold', state:'manualBranch',  points:[[1081,536],[1081,577]]},
+
+  // 병합 버스(자동 OR 수동) -> X/T/FR/MC1/MC2 코일로 각각 분기
+  {id:'merge-bus',   state:'merged', points:[[837,577],[1407,577]]},
+  {id:'fls-lamp',    state:'fls', points:[[837,577],[837,741]]},
+  {id:'x-feed',      state:'x',  points:[[1000,577],[1000,741]]},
+  {id:'x-return',    state:'x',  points:[[1000,781],[1000,825]]},
+  {id:'t-feed',      state:'t',  points:[[1081,577],[1081,741]]},
+  {id:'t-return',    state:'t',  points:[[1081,781],[1081,825]]},
+  {id:'fr-feed',     state:'fr', points:[[1163,577],[1163,741]]},
+  {id:'fr-return',   state:'fr', points:[[1163,781],[1163,825]]},
+  {id:'mc1-feed',    state:'mc1', points:[[1244,577],[1244,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[1244,781],[1244,825]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1326,577],[1326,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1326,781],[1326,825]]},
+  {id:'rl-feed',     state:'mc1', points:[[1489,248],[1489,741]]},
+  {id:'rl-return',   state:'mc1', points:[[1489,781],[1489,825]]},
+  {id:'gl-feed',     state:'mc2', points:[[1570,251],[1570,741]]},
+  {id:'gl-return',   state:'mc2', points:[[1570,781],[1570,825]]},
+];
+
+
+
+// ==================== 도면 6 ====================
+// 특이 구조: X(M00000)는 오직 자동(A&&FLS)에서만 세팅되고 수동으로는 절대 안 바뀜.
+// 대신 "finalX"(수동경로 OR 현재 X) 라는 중간값이 따로 계산되어 T·hold·FR/MC1/MC2를 구동함.
+// 즉 X 표시등은 자동일 때만 켜지지만, 실제 동작(FR/MC1/MC2)은 수동으로도 됨.
+function diagram6FlowStates(){
+  const x=overlayTerminalOn(dlrResolve(6,'X'));  // 자동 전용 값(M00000, 절대 수동으로 안 바뀜)
+  const t=overlayTerminalOn(dlrResolve(6,'T'));
+  const fr=overlayTerminalOn(dlrResolve(6,'FR'));
+  const mc1=overlayTerminalOn(dlrResolve(6,'MC1')), mc2=overlayTerminalOn(dlrResolve(6,'MC2'));
+  const fls=!!ui.fls;
+  const hold = !!plc.get('M00002');
+  const controlPower=true, eocrNormal=!ui.eocr, eocrTrip=!!ui.eocr;
+  const ssAuto = !ui.eocr && !!ui.ss;
+  const ssManual = !ui.eocr && !ui.ss;
+  const autoBranch = ssAuto && !!ui.fls;   // X는 이 값 그대로
+  const manualPastPB0 = ssManual && !ui.pb0;
+  const manualBranch = manualPastPB0 && (!!ui.pb1 || hold);
+  // finalX: 수동 경로 또는 현재 X(자동) 중 하나라도 있으면 통전 — T/hold/FR/MC1/MC2는 이걸 사용
+  const finalX = !ui.eocr && (manualBranch || x);
+  return { controlPower, eocrNormal, eocrTrip, ssAuto, ssManual, autoBranch,
+           manualPastPB0, manualBranch, finalX, x, t, fr, mc1, mc2, fls };
+}
+
+const DIAGRAM6_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[511,292],[634,292]]},
+  {id:'feed-normal', state:'eocrNormal',   points:[[674,292],[1570,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[511,822],[1570,822]]},
+
+  {id:'eocr-feed',   state:'eocrTrip', points:[[593,288],[593,741]]},
+  {id:'eocr-return', state:'eocrTrip', points:[[593,781],[593,825]]},
+  {id:'yl-branch',   state:'eocrTrip', points:[[589,536],[674,536]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,618],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+  {id:'bz-branch',   state:'eocrTrip', points:[[671,659],[756,659]]},
+  {id:'bz-feed',     state:'eocrTrip', points:[[756,659],[756,825]]},
+
+  // 자동(A) 경로: A -> FLS -> X코일 직결 (수동과 병합되지 않음, X는 순수 자동값)
+  {id:'auto-a',      state:'ssAuto',     points:[[837,289],[837,333]]},
+  {id:'auto-fls',    state:'autoBranch', points:[[837,373],[837,496]]},
+  {id:'auto-to-x-bridge', state:'autoBranch', points:[[834,496],[1000,496]]},
+  {id:'x-feed',      state:'x', points:[[1000,496],[1000,741]]},
+  {id:'x-return',    state:'x', points:[[1000,781],[1000,825]]},
+
+  // 수동(M) 경로: M -> PB0 -> PB1/자기유지 -> finalX(=수동 OR 현재X) -> T코일
+  {id:'manual-m',    state:'ssManual',      points:[[1081,289],[1081,333]]},
+  {id:'manual-pb0',  state:'ssManual',      points:[[1081,373],[1081,414]]},
+  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1081,455],[1081,537]]},
+  {id:'manual-pb1hold', state:'manualBranch',  points:[[1081,577],[1081,659]]},
+  {id:'t-feed',      state:'t', points:[[1081,699],[1081,741]]},
+  {id:'t-return',    state:'t', points:[[1081,781],[1081,825]]},
+
+  // X(자동값) 자기참조 접점 -> FR코일 (finalX 기준으로 표시해 아래 FR/MC1/MC2와 모순 없게)
+  {id:'x-contact',   state:'finalX', points:[[1244,292],[1244,333]]},
+  {id:'fr-feed',     state:'fr', points:[[1244,373],[1244,741]]},
+  {id:'fr-return',   state:'fr', points:[[1244,781],[1244,825]]},
+  {id:'fr-to-mc1-bridge', state:'finalX', points:[[1244,496],[1326,496]]},
+  {id:'mc1-feed',    state:'mc1', points:[[1326,577],[1326,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[1326,781],[1326,825]]},
+
+  {id:'rl-feed',     state:'mc1', points:[[1407,289],[1407,741]]},
+  {id:'rl-return',   state:'mc1', points:[[1407,781],[1407,825]]},
+  {id:'gl-feed',     state:'mc2', points:[[1489,293],[1489,741]]},
+  {id:'gl-return',   state:'mc2', points:[[1489,781],[1489,825]]},
+  {id:'mc1-to-mc2-bridge', state:'finalX', points:[[1244,496],[1570,496]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1570,577],[1570,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1570,781],[1570,825]]},
+];
 
 
 // 원본 JPG에서 검은 직선 배선을 검출해 저장한 좌표입니다.
@@ -1072,6 +1496,78 @@ function buildOverlayFor(dnum, cfg){
     return;
   }
 
+  // 도면 4: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='4'){
+    DIAGRAM4_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
+  // 도면 5: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='5'){
+    DIAGRAM5_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
+  // 도면 6: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='6'){
+    DIAGRAM6_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
+  // 도면 13: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='13'){
+    DIAGRAM13_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
+  // 도면 14: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='14'){
+    DIAGRAM14_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
+  // 도면 15: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='15'){
+    DIAGRAM15_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
   // 도면 2~18: 원본 JPG에서 검출한 실제 검은 배선 좌표를 그대로 사용
   buildDetectedWireFlow(dnum, cfg).forEach(seg=>{
     overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
@@ -1205,6 +1701,102 @@ function updateDiagramOverlay(){
     };
     Object.entries(overlayCoilEls).forEach(([label,el])=>{
       el.classList.toggle('on', !!ringState12[label]);
+    });
+    return;
+  }
+
+  // 도면 4: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='4'){
+    const st = diagram4FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState4 = {
+      EOCR: st.eocrTrip, YL: st.eocrTrip, BZ: st.eocrTrip, FLS: st.fls,
+      FR: st.fr, X: st.x, MC1: st.mc1, MC2: st.mc2, T: st.t, RL: st.mc1, GL: st.mc2,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState4[label]);
+    });
+    return;
+  }
+
+  // 도면 5: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='5'){
+    const st = diagram5FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState5 = {
+      EOCR: st.eocrTrip, YL: st.eocrTrip, BZ: st.eocrTrip, FLS: st.fls,
+      X: st.x, T: st.t, FR: st.fr, MC1: st.mc1, MC2: st.mc2, RL: st.mc1, GL: st.mc2,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState5[label]);
+    });
+    return;
+  }
+
+  // 도면 6: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='6'){
+    const st = diagram6FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState6 = {
+      EOCR: st.eocrTrip, YL: st.eocrTrip, BZ: st.eocrTrip, FLS: st.fls,
+      X: st.x, T: st.t, FR: st.fr, MC1: st.mc1, RL: st.mc1, GL: st.mc2, MC2: st.mc2,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState6[label]);
+    });
+    return;
+  }
+
+  // 도면 13: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='13'){
+    const st = diagram13FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState13 = {
+      EOCR: true, YL: st.eocrTrip, X1: st.x1, MC1: st.mc1, T1: st.t1,
+      X2: st.x2, MC2: st.mc2, T2: st.t2, WL: st.wl, RL: st.mc1, GL: st.mc2,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState13[label]);
+    });
+    return;
+  }
+
+  // 도면 14: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='14'){
+    const st = diagram14FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState14 = {
+      EOCR: true, YL: st.eocrTrip, X1: st.x1, X2: st.x2, MC1: st.mc1, T1: st.t1,
+      RL: st.mc1, MC2: st.mc2, T2: st.t2, GL: st.mc2, WL: st.wl,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState14[label]);
+    });
+    return;
+  }
+
+  // 도면 15: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='15'){
+    const st = diagram15FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState15 = {
+      EOCR: true, YL: st.eocrTrip, X1: st.x1, X2: st.x2, MC1: st.mc1, T1: st.t1,
+      RL: st.mc1, MC2: st.mc2, T2: st.t2, GL: st.mc2, WL: st.wl,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState15[label]);
     });
     return;
   }
