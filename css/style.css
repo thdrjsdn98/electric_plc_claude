@@ -597,7 +597,7 @@
   .diagram-overlay .ground-wire{ fill:none; stroke:#19c96b; stroke-width:3; stroke-linecap:round; opacity:0; }
   .diagram-overlay .ground-wire.on{ opacity:.95; filter:drop-shadow(0 0 3px rgba(25,201,107,.55)); }
   .diagram-overlay .coil-ring{ fill:none; stroke:#c9ccd1; stroke-width:0; opacity:0; }
-  .diagram-overlay .coil-ring.on{ stroke:#ff3b30; stroke-width:6; opacity:1; filter: drop-shadow(0 0 6px rgba(255,59,48,.55)); }
+  .diagram-overlay .coil-ring.on{ stroke:#ff3b30; stroke-width:2.5; opacity:1; filter: drop-shadow(0 0 4px rgba(255,59,48,.65)); }
   .diagram-overlay .fr-contact{ stroke:#9aa1ab; stroke-width:4; stroke-linecap:round; opacity:.55; }
   .diagram-overlay .fr-contact.on{ stroke:#ff3b30; stroke-width:6; opacity:1; filter: drop-shadow(0 0 6px rgba(255,59,48,.55)); }
   .diagram-image-empty{
