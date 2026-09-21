@@ -383,6 +383,179 @@ function diagram1FlowStates(){
            runBus, manualRun, manualPB1, manualHold, autoRun };
 }
 
+function diagram2FlowStates(){
+  const x   = overlayTerminalOn(dlrResolve(2,'X'));
+  const t   = overlayTerminalOn(dlrResolve(2,'T'));
+  const fr  = overlayTerminalOn(dlrResolve(2,'FR'));
+  const mc1 = overlayTerminalOn(dlrResolve(2,'MC1'));
+  const mc2 = overlayTerminalOn(dlrResolve(2,'MC2'));
+  const fls = !!ui.fls;
+  const controlPower = true;
+  const eocrNormal = !ui.eocr;
+  const eocrTrip = !!ui.eocr;
+  // SS가 A(자동) 위치인지 M(수동) 위치인지 — 접점 자신의 조건만으로 판단
+  const ssAuto = !ui.eocr && !!ui.ss;
+  const ssManual = !ui.eocr && !ui.ss;
+  // 자동 분기: A 접점 다음에 FLS 접점을 지나야 함
+  const autoBranch = ssAuto && !ui.fls;
+  // 수동 분기: M 접점 -> PB0(정지 아님) 통과
+  const manualPastPB0 = ssManual && !ui.pb0;
+  // PB1을 누르거나, 이미 X가 켜져 있으면(자기유지) 통전
+  const manualBranch = manualPastPB0 && (!!ui.pb1 || x);
+  // 자동/수동 두 경로가 만나는 지점 — 어느 한쪽이라도 닫혀 있으면 통전
+  const merged = autoBranch || manualBranch;
+  // X 보조접점 다음에 T(타이머) 보조접점까지 지나야 FR로 이어짐(직렬)
+  const xt = x && t;
+  return { controlPower, eocrNormal, eocrTrip, ssAuto, ssManual, autoBranch,
+           manualPastPB0, manualBranch, merged, x, t, xt, fr, mc1, mc2, fls };
+}
+
+const DIAGRAM2_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[511,292],[634,292]]},
+  {id:'feed-normal', state:'eocrNormal',   points:[[674,292],[1570,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[511,822],[1570,822]]},
+
+  // EOCR 트립 표시(EOCR/YL/BZ 모두 트립 상태를 그대로 미러링)
+  {id:'eocr-feed',   state:'eocrTrip', points:[[592,288],[592,741]]},
+  {id:'eocr-return', state:'eocrTrip', points:[[592,781],[592,825]]},
+  {id:'yl-branch',   state:'eocrTrip', points:[[589,536],[674,536]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,618],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,825]]},
+  {id:'bz-branch',   state:'eocrTrip', points:[[671,659],[756,659]]},
+  {id:'bz-feed',     state:'eocrTrip', points:[[756,659],[756,740]]},
+  {id:'bz-return',   state:'eocrTrip', points:[[756,784],[756,825]]},
+
+  // FLS 상태 표시등 (플로트 스위치 입력을 그대로 미러링)
+  {id:'fls-branch',  state:'fls', points:[[853,496],[1003,496]]},
+  {id:'fls-feed',    state:'fls', points:[[837,496],[837,741]]},
+  {id:'fls-return',  state:'fls', points:[[837,781],[837,825]]},
+
+  // 자동(A) 경로: SS가 A위치 -> FLS 접점 -> 병합점 -> X 코일
+  {id:'auto-a',      state:'ssAuto',    points:[[1000,288],[1000,333]]},
+  {id:'auto-fls',    state:'autoBranch',points:[[1000,373],[1000,618]]},
+  {id:'merge-to-x',  state:'merged',    points:[[1000,618],[1000,741]]},
+  {id:'x-return',    state:'x',         points:[[1000,781],[1000,825]]},
+
+  // 수동(M) 경로: SS가 M위치 -> PB0(정지 아님) -> PB1 또는 자기유지(X)
+  {id:'manual-m',       state:'ssManual',      points:[[1081,288],[1081,333]]},
+  {id:'manual-pb0',     state:'manualPastPB0', points:[[1081,373],[1081,537]]},
+  {id:'manual-pb1hold', state:'manualBranch',  points:[[1081,577],[1081,621]]},
+  // 자동<->수동 교차 브릿지: 두 경로가 실제로 만나는 지점 (어느 한쪽이든 살아있으면 통전)
+  {id:'bridge-1',    state:'merged', points:[[996,618],[1056,618]]},
+  {id:'bridge-2',    state:'merged', points:[[996,700],[1081,700]]},
+  {id:'merge-to-t',  state:'x',      points:[[1081,700],[1081,741]]},
+  {id:'t-return',    state:'t',      points:[[1081,781],[1081,825]]},
+
+  // X의 보조접점(a접점) -> T의 보조접점(a접점) -> FR 코일 (직렬)
+  {id:'x-aux-contact', state:'x',  points:[[1244,289],[1244,333]]},
+  {id:'t-aux-contact', state:'xt', points:[[1244,373],[1244,414]]},
+  {id:'fr-feed',       state:'fr', points:[[1244,455],[1244,741]]},
+  {id:'fr-return',     state:'fr', points:[[1244,781],[1244,825]]},
+
+  // X&&T 접점 통과 지점에서 MC1/MC2로도 분기
+  {id:'xt-bus',      state:'xt',  points:[[1241,618],[1407,618]]},
+  {id:'mc1-feed-a',  state:'mc1', points:[[1325,615],[1325,659]]},
+  {id:'mc1-feed-b',  state:'mc1', points:[[1326,699],[1326,741]]},
+  {id:'mc1-return',  state:'mc1', points:[[1326,781],[1326,825]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1406,699],[1407,739]]},
+  {id:'mc2-return',  state:'mc2', points:[[1407,781],[1407,825]]},
+
+  // RL/GL (MC1/MC2 보조접점으로 구동되는 표시등)
+  {id:'rl-feed',    state:'mc1', points:[[1488,289],[1488,741]]},
+  {id:'rl-return',  state:'mc1', points:[[1488,781],[1488,825]]},
+  {id:'gl-feed',    state:'mc2', points:[[1570,293],[1570,741]]},
+  {id:'gl-return',  state:'mc2', points:[[1570,781],[1570,825]]},
+];
+
+function diagram3FlowStates(){
+  const x   = overlayTerminalOn(dlrResolve(3,'X'));     // M00000, 이번 스캔 결과값(자기참조 접점 표시용으로도 재사용)
+  const fr  = overlayTerminalOn(dlrResolve(3,'FR'));
+  const mc1 = overlayTerminalOn(dlrResolve(3,'MC1'));
+  const mc2 = overlayTerminalOn(dlrResolve(3,'MC2'));
+  const fls = !!ui.fls;
+  const hold = !!plc.get('M00001');
+  const controlPower = true;
+  const eocrNormal = !ui.eocr;
+  const eocrTrip = !!ui.eocr;
+  const ssAuto = !ui.eocr && !!ui.ss;
+  const ssManual = !ui.eocr && !ui.ss;
+  // 자동 분기: A 접점 다음에 FLS 접점(이번 도면은 AND, 즉 FLS가 ON이어야 통전)
+  const autoBranch = ssAuto && !!ui.fls;
+  // X 자기 자신(직전 스캔 값) 또는 자동분기 중 하나라도 있으면 병합점 통전
+  // (FR/MC1/MC2/FR타이머는 이 병합값을 그대로 사용 — X 코일 자체와는 다른 갈래)
+  const merged = !ui.eocr && (x || autoBranch);
+  // 수동 분기: M 접점 -> PB0(정지 아님) 통과
+  const manualPastPB0 = ssManual && !ui.pb0;
+  const manualPB1 = manualPastPB0 && !!ui.pb1;
+  const manualHoldOnly = manualPastPB0 && hold;
+  const manualBranch = manualPastPB0 && (!!ui.pb1 || hold);
+  return { controlPower, eocrNormal, eocrTrip, ssAuto, ssManual, autoBranch, merged,
+           manualPastPB0, manualPB1, manualHoldOnly, manualBranch, x, fr, mc1, mc2, fls };
+}
+
+const DIAGRAM3_REAL_FLOW = [
+  {id:'feed-pre',    state:'controlPower', points:[[511,292],[634,292]]},
+  {id:'feed-normal', state:'eocrNormal',   points:[[674,292],[1489,292]]},
+  {id:'return-bus',  state:'controlPower', points:[[511,822],[1489,822]]},
+
+  // EOCR 트립 표시(EOCR/YL/BZ 모두 트립 상태를 그대로 미러링)
+  {id:'eocr-feed',   state:'eocrTrip', points:[[592,288],[592,741]]},
+  {id:'eocr-return', state:'eocrTrip', points:[[592,781],[592,819]]},
+  {id:'yl-branch',   state:'eocrTrip', points:[[589,537],[674,537]]},
+  {id:'yl-feed',     state:'eocrTrip', points:[[674,618],[674,741]]},
+  {id:'yl-return',   state:'eocrTrip', points:[[674,781],[674,819]]},
+  {id:'bz-branch',   state:'eocrTrip', points:[[671,659],[755,659]]},
+  {id:'bz-feed',     state:'eocrTrip', points:[[756,659],[756,825]]},
+
+  // X 자기참조 접점(직전 스캔값) — 병합점까지
+  {id:'x-contact',   state:'x',      points:[[918,289],[918,333]]},
+  {id:'x-to-merge',  state:'x',      points:[[918,373],[918,537]]},
+
+  // 자동(A) 경로: A 접점 -> FLS 접점(직렬) -> 병합점
+  {id:'auto-a',      state:'ssAuto',    points:[[1000,288],[1000,333]]},
+  {id:'auto-fls-in',  state:'ssAuto',   points:[[1000,373],[1000,455]]},
+  {id:'auto-fls-out', state:'autoBranch', points:[[1000,495],[1000,537]]},
+
+  // FLS 표시등(플로트 스위치 raw 입력을 그대로 표시 — 배선상 A분기에서 탭되어 있지만
+  // 실제 표시는 항상 원시 입력값을 따름)
+  {id:'fls-branch',  state:'fls', points:[[996,414],[1080,414]]},
+  {id:'fls-feed',    state:'fls', points:[[1081,414],[1081,741]]},
+
+  // 병합 이후: FR 코일, MC1/MC2 보조접점 분기
+  {id:'merge-bridge', state:'merged', points:[[915,537],[1002,537]]},
+  {id:'merge-to-fr',  state:'merged', points:[[1000,537],[1000,699]]},
+  {id:'fr-feed',      state:'fr',     points:[[1000,699],[1000,741]]},
+  {id:'fr-return',    state:'fr',     points:[[1000,781],[1000,819]]},
+  {id:'merge-down',   state:'merged', points:[[918,537],[918,618]]},
+  {id:'mc1-branch',   state:'mc1',    points:[[837,618],[922,618]]},
+  {id:'mc1-feed',     state:'mc1',    points:[[837,619],[837,741]]},
+  {id:'mc1-return',   state:'mc1',    points:[[837,781],[837,819]]},
+  {id:'mc2-feed',     state:'mc2',    points:[[918,618],[919,741]]},
+  {id:'mc2-return',   state:'mc2',    points:[[919,782],[919,825]]},
+
+  // 수동(M) 경로: M -> PB0(정지 아님) -> [PB1 | 자기유지] -> T코일 / X코일
+  {id:'manual-m',    state:'ssManual',      points:[[1244,289],[1244,333]]},
+  {id:'manual-pb0',  state:'ssManual',      points:[[1244,373],[1244,414]]},
+  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1244,455],[1244,537]]},
+  {id:'manual-pb1',  state:'manualPB1',     points:[[1244,577],[1244,621]]},
+  {id:'manual-hold',  state:'manualHoldOnly', points:[[1325,496],[1326,537]]},
+  {id:'manual-merge-bridge', state:'manualBranch', points:[[1244,569],[1326,569]]},
+  {id:'t-feed',      state:'manualBranch',  points:[[1244,621],[1244,741]]},
+  {id:'t-return',    state:'manualBranch',  points:[[1244,781],[1244,825]]},
+  // T0001 자신의 접점(수동분기가 타이머 완료될 때까지 기다렸다가 X 코일로)
+  {id:'t0001-contact', state:'manualBranch', points:[[1326,577],[1326,659]]},
+  {id:'x-feed',      state:'x',             points:[[1326,699],[1326,741]]},
+  {id:'x-return',    state:'x',             points:[[1326,782],[1326,825]]},
+
+  // RL/GL (MC1/MC2 보조접점으로 구동되는 표시등)
+  {id:'rl-feed',    state:'mc1', points:[[1407,288],[1407,741]]},
+  {id:'rl-return',  state:'mc1', points:[[1407,781],[1407,825]]},
+  {id:'gl-feed',    state:'mc2', points:[[1488,293],[1488,741]]},
+  {id:'gl-return',  state:'mc2', points:[[1488,783],[1488,820]]},
+];
+
+
+
 
 
 // 원본 JPG에서 검은 직선 배선을 검출해 저장한 좌표입니다.
@@ -585,6 +758,30 @@ function buildOverlayFor(dnum, cfg){
     return;
   }
 
+  // 도면 2: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='2'){
+    DIAGRAM2_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
+  // 도면 3: 접점 단위로 재구성한 실제 배선 경로
+  if(String(dnum)==='3'){
+    DIAGRAM3_REAL_FLOW.forEach(seg=>{
+      overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
+    });
+    Object.entries(cfg.x).forEach(([label,x])=>{
+      overlayCoilEls[label] = makeCircle(x, 755, 19, 'coil-ring');
+    });
+    overlayBuiltFor = dnum;
+    return;
+  }
+
   // 도면 2~18: 원본 JPG에서 검출한 실제 검은 배선 좌표를 그대로 사용
   buildDetectedWireFlow(dnum, cfg).forEach(seg=>{
     overlayCustomEls[seg.id] = { el:makePath(seg.points,'wire'), state:seg.state };
@@ -637,6 +834,39 @@ function updateDiagramOverlay(){
     };
     Object.entries(overlayCoilEls).forEach(([label,el])=>{
       el.classList.toggle('on', !!ringState[label]);
+    });
+    return;
+  }
+
+  // 도면 2: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='2'){
+    const st = diagram2FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState2 = {
+      EOCR: st.eocrTrip, YL: st.eocrTrip, BZ: st.eocrTrip, FLS: st.fls,
+      X: st.x, T: st.t, FR: st.fr, MC1: st.mc1, MC2: st.mc2, RL: st.mc1, GL: st.mc2,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState2[label]);
+    });
+    return;
+  }
+
+  // 도면 3: 접점 단위로 계산한 실제 통전 상태 반영
+  if(String(dnum)==='3'){
+    const st = diagram3FlowStates();
+    Object.values(overlayCustomEls).forEach(item=>{
+      item.el.classList.toggle('on', !!st[item.state]);
+    });
+    const ringState3 = {
+      EOCR: st.eocrTrip, YL: st.eocrTrip, BZ: st.eocrTrip,
+      MC1: st.mc1, MC2: st.mc2, FR: st.fr, FLS: st.fls,
+      T: st.manualBranch, X: st.x, RL: st.mc1, GL: st.mc2,
+    };
+    Object.entries(overlayCoilEls).forEach(([label,el])=>{
+      el.classList.toggle('on', !!ringState3[label]);
     });
     return;
   }
