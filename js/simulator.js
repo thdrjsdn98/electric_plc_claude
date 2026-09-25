@@ -536,15 +536,15 @@ const DIAGRAM3_REAL_FLOW = [
   // 수동(M) 경로: M -> PB0(정지 아님) -> [PB1 | 자기유지] -> T코일 / X코일
   {id:'manual-m',    state:'ssManual',      points:[[1244,289],[1244,333]]},
   {id:'manual-pb0',  state:'ssManual',      points:[[1244,373],[1244,414]]},
-  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1244,455],[1244,537]]},
-  {id:'manual-pb1',  state:'manualPB1',     points:[[1244,577],[1244,621]]},
-  {id:'manual-hold',  state:'manualHoldOnly', points:[[1325,496],[1326,537]]},
-  {id:'manual-merge-bridge', state:'manualBranch', points:[[1244,569],[1326,569]]},
-  {id:'t-feed',      state:'manualBranch',  points:[[1244,621],[1244,741]]},
+  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1244,455],[1244,544]]},
+  {id:'manual-top-bridge', state:'manualBranch', points:[[1244,544],[1326,544]]},
+  {id:'manual-pb1',  state:'manualPB1',     points:[[1244,577],[1244,659]]},
+  {id:'manual-hold',  state:'manualHoldOnly', points:[[1326,577],[1326,659]]},
+  {id:'t-feed',      state:'manualBranch',  points:[[1244,659],[1244,741]]},
   {id:'t-return',    state:'manualBranch',  points:[[1244,781],[1244,825]]},
-  // T0001 자신의 접점(수동분기가 타이머 완료될 때까지 기다렸다가 X 코일로)
-  {id:'t0001-contact', state:'manualBranch', points:[[1326,577],[1326,659]]},
-  {id:'x-feed',      state:'x',             points:[[1326,699],[1326,741]]},
+  // T0001 자신의 접점(수동분기가 타이머 완료될 때까지 기다렸다가 X 코일로) — 타이머 "완료" 시에만 닫힘
+  {id:'t0001-contact', state:'x', points:[[1326,667],[1326,692]]},
+  {id:'x-feed',      state:'x',             points:[[1326,692],[1326,741]]},
   {id:'x-return',    state:'x',             points:[[1326,782],[1326,825]]},
 
   // RL/GL (MC1/MC2 보조접점으로 구동되는 표시등)
@@ -1157,8 +1157,11 @@ const DIAGRAM5_REAL_FLOW = [
   {id:'fr-return',   state:'fr', points:[[1163,781],[1163,825]]},
   {id:'mc1-feed',    state:'mc1', points:[[1244,577],[1244,741]]},
   {id:'mc1-return',  state:'mc1', points:[[1244,781],[1244,825]]},
-  {id:'mc2-feed',    state:'mc2', points:[[1326,577],[1326,741]]},
-  {id:'mc2-return',  state:'mc2', points:[[1326,781],[1326,825]]},
+  {id:'mc2-fr2-contact', state:'mc2', points:[[1325,577],[1325,618]]},
+  {id:'mc2-t-detour',    state:'mc2', points:[[1406,577],[1406,618]]},
+  {id:'mc2-jog-bottom',  state:'mc2', points:[[1325,659],[1406,659]]},
+  {id:'mc2-feed',    state:'mc2', points:[[1325,659],[1325,741]]},
+  {id:'mc2-return',  state:'mc2', points:[[1325,781],[1325,825]]},
   {id:'rl-feed',     state:'mc1', points:[[1489,248],[1489,741]]},
   {id:'rl-return',   state:'mc1', points:[[1489,781],[1489,825]]},
   {id:'gl-feed',     state:'mc2', points:[[1570,251],[1570,741]]},
@@ -1557,11 +1560,15 @@ function diagram6FlowStates(){
   const ssManual = !ui.eocr && !ui.ss;
   const autoBranch = ssAuto && !!ui.fls;   // X는 이 값 그대로
   const manualPastPB0 = ssManual && !ui.pb0;
+  const manualPB1 = manualPastPB0 && !!ui.pb1;
+  const manualHoldOnly = manualPastPB0 && hold;
   const manualBranch = manualPastPB0 && (!!ui.pb1 || hold);
-  // finalX: 수동 경로 또는 현재 X(자동) 중 하나라도 있으면 통전 — T/hold/FR/MC1/MC2는 이걸 사용
+  // T 코일 앞의 X 접점은 b접점(NC) — X(자동값)가 꺼져 있을 때만 통전
+  const tEnable = manualBranch && !x;
+  // finalX: 수동 경로 또는 현재 X(자동) 중 하나라도 있으면 통전 — FR/MC1/MC2는 이걸 사용
   const finalX = !ui.eocr && (manualBranch || x);
   return { controlPower, eocrNormal, eocrTrip, ssAuto, ssManual, autoBranch,
-           manualPastPB0, manualBranch, finalX, x, t, fr, mc1, mc2, fls };
+           manualPastPB0, manualPB1, manualHoldOnly, manualBranch, tEnable, finalX, x, t, fr, mc1, mc2, fls };
 }
 
 const DIAGRAM6_REAL_FLOW = [
@@ -1584,11 +1591,15 @@ const DIAGRAM6_REAL_FLOW = [
   {id:'x-feed',      state:'x', points:[[1000,496],[1000,741]]},
   {id:'x-return',    state:'x', points:[[1000,781],[1000,825]]},
 
-  // 수동(M) 경로: M -> PB0 -> PB1/자기유지 -> finalX(=수동 OR 현재X) -> T코일
+  // 수동(M) 경로: M -> PB0 -> PB1/자기유지(병렬) -> X접점(NC) -> T코일
   {id:'manual-m',    state:'ssManual',      points:[[1081,289],[1081,333]]},
   {id:'manual-pb0',  state:'ssManual',      points:[[1081,373],[1081,414]]},
-  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1081,455],[1081,537]]},
-  {id:'manual-pb1hold', state:'manualBranch',  points:[[1081,577],[1081,659]]},
+  {id:'manual-pb0-out', state:'manualPastPB0', points:[[1081,455],[1081,577]]},
+  {id:'manual-pb1',  state:'manualPB1',     points:[[1081,577],[1081,621]]},
+  {id:'manual-hold', state:'manualHoldOnly', points:[[1163,577],[1163,621]]},
+  {id:'merge-bridge-top', state:'manualPastPB0', points:[[1081,577],[1163,577]]},
+  {id:'merge-bridge-bottom', state:'manualBranch', points:[[1081,621],[1163,621]]},
+  {id:'x2-contact',  state:'tEnable',  points:[[1081,621],[1081,691]]},
   {id:'t-feed',      state:'t', points:[[1081,699],[1081,741]]},
   {id:'t-return',    state:'t', points:[[1081,781],[1081,825]]},
 
